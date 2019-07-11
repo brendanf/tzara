@@ -10,6 +10,8 @@ combine_bigmaps(dadamap, rawdata, key = "Region")
 \item{dadamap}{(\code{\link{dadamap}} object)}
 
 \item{rawdata}{(\code{\link[tibble]{tibble}}) as returned by \code{\link{summarize_sread}}}
+
+\item{key}{(\code{character}) no longer used??}
 }
 \value{
 a \code{\link[tibble]{tibble}} giving the sequences for each region (contents of the column given by \code{key}) for each read (uniquely identified by all other columns)
@@ -20,7 +22,7 @@ Combine raw and denoised reads from multiple regions of the same sequences.
 \details{
 Both of the inputs should be annotated with identifying columns to
 uniquely identify the source \code{\link[dada2:derep-class]{derep}} objects;
-this should happen automatically if \code{\link[dada2]{derep}} and
+this should happen automatically if \code{\link[dada2]{derepFastq}} and
 \code{\link[ShortRead]{readFastq}} are called on a list of filenames (there
 will be a column "name" in the outputs of \code{\link{dadamap}} and
 \code{\link{summarize_sread}}).

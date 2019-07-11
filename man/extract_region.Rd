@@ -9,8 +9,9 @@
 extract_region(seq, positions, region, region2 = region,
   outfile = NULL, ...)
 
-\method{extract_region}{character}(seq, outfile = NULL, positions,
-  region, region2 = region, qualityType = "FastqQuality", ...)
+\method{extract_region}{character}(seq, positions, region,
+  region2 = region, outfile = NULL, qualityType = "FastqQuality",
+  ...)
 
 \method{extract_region}{ShortRead}(seq, positions, region,
   region2 = region, outfile = NULL, ...)
@@ -25,6 +26,10 @@ extract_region(seq, positions, region, region2 = region,
 \item{region2}{(\code{character}) If different from \code{region}, then the entire segment beginning at the start of \code{region} and ending at the end of \code{region2} will be extracted.  For instance, to extract the entire ITS region, use \code{region = 'ITS1', region2 = 'ITS2'}.}
 
 \item{outfile}{(\code{character}) If given, the output will be written to the filename given in fasta or fastq format.  The format is determined by \code{seq}, not by the extension of \code{outfile}.}
+
+\item{...}{Passed to methods.}
+
+\item{qualityType}{(\code{character}) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.}
 }
 \value{
 (\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region from each of the input sequences where it was found.

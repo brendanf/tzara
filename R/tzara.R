@@ -1,5 +1,14 @@
+#' @import utils
+utils::globalVariables(c(".", ".seqs", "asv.idx", "asv.seq", "border",
+                         "dada.idx", "derep", "derep.idx", "derep.seq", "end",
+                         "newmap", "seq.id", "start", "the_sread"))
+
 #' @importFrom magrittr %>%
 `%>%`
+
+.onLoad <- function(libname, pkgname) {
+   backports::import(pkgname)
+}
 
 #' Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into a master map
 #'
@@ -28,8 +37,8 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    groups <- names(list(...))
    if (is.data.frame(dereps)) {
       if (length(list(...)) > 0) {
-         dereps <- bind_columns(
-            tibble::tibble(.placeholder = seq_along(nrows(dereps)),
+         dereps <- dplyr::bind_cols(
+            tibble::tibble(.placeholder = seq_along(nrow(dereps)),
                         ...),
             dereps)
          dereps <- dplyr::select(dereps, -".placeholder")
@@ -41,7 +50,7 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    }
 
    if (!missing(.data)) {
-      dereps <- dplyr::bind_columns(.data, dereps)
+      dereps <- dplyr::bind_cols(.data, dereps)
    }
 
    # Check that our derep objects are uniquely identified
@@ -72,7 +81,7 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    newuniques <- olduniques %>%
       dplyr::group_by(seq) %>%
       dplyr::summarize(n = sum(n)) %>%
-      dplyr::arrange(desc(n)) %>%
+      dplyr::arrange(dplyr::desc(n)) %>%
       dplyr::transmute(seq = seq,
                        newmap = seq_along(seq))
 
@@ -91,12 +100,13 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    # map from the individual sequences in each file to the master unique
    # sequence list
    out$map <- dplyr::left_join(oldmap,
-                               dplyr::select(newderep, dplyr::one_of(gps), "oldmap", "newmap"),
+                               dplyr::select(newderep, dplyr::one_of(gps),
+                                             "oldmap", "newmap"),
                                by = c(gps, "oldmap")) %>%
       dplyr::select(-oldmap, map = newmap)
    #unique sequence list
-   out$fasta <- Biostrings::DNAStringSet(x = set_names(newuniques$seq,
-                                                       newuniques$newmap))
+   out$fasta <- Biostrings::DNAStringSet(x = purrr::set_names(newuniques$seq,
+                                                              newuniques$newmap))
    class(out) <- c("multiderep", class(out))
    return(out)
 }
@@ -199,6 +209,7 @@ seqhash.XStringSet <- function(seq, algo = "xxhash32", len = NA) {
 #' Add sequence names to a derep object
 #'
 #' @param derep (object of class \code{\link[dada2:derep-class]{derep}} or a \code{list} of  such objects) object(s) to add names to.
+#' @param ... passed to methods
 #'
 #' @return (object of class \code{derep}, or a list of such objects) a
 #' shallow copy of \code{derep}, with an additional member "\code{$names}",
@@ -210,7 +221,7 @@ add_derep_names <- function(derep, ...) UseMethod("add_derep_names")
 #' @param filename (\code{character}) name of fasta/q file that the
 #'     \code{\link[dada2:derep-class]{derep}} object was derived from.
 #' @export
-add_derep_names.derep <- function(derep, filename) {
+add_derep_names.derep <- function(derep, filename, ...) {
    assertthat::assert_that(file.exists(filename))
    fqs <- ShortRead::FastqStreamer(filename, n = 1e4)
    on.exit(close(fqs))
@@ -226,7 +237,7 @@ add_derep_names.derep <- function(derep, filename) {
 #' @param filenames (\code{character}) name(s) of file(s) that a \code{list} of
 #'     \code{\link[dada2:derep-class]{derep}} was derived from.
 #' @export
-add_derep_names.list <- function(derep, filenames = names(derep)) {
+add_derep_names.list <- function(derep, filenames = names(derep), ...) {
    if (!all(inherits(derep, "derep") |
                                   vapply(derep, is.na, TRUE))) {
       stop("length of filenames and derep do not match")
@@ -263,7 +274,7 @@ summarize_sread.ShortReadQ <- function(sread, ..., max_ee = Inf) {
       seq.id = as.character(sread@id),
       seq = as.character(sread@sread),
       ...)
-   ee <- rowSums(10^-(as(sread@quality, "matrix")/10), na.rm = TRUE)
+   ee <- rowSums(10^-(methods::as(sread@quality, "matrix")/10), na.rm = TRUE)
    out <- out[ee <= max_ee,,drop = FALSE]
 }
 
@@ -282,10 +293,11 @@ summarize_sread.list <- function(sread, ..., max_ee = Inf) {
 #'
 #' @param dadamap (\code{\link{dadamap}} object)
 #' @param rawdata (\code{\link[tibble]{tibble}}) as returned by \code{\link{summarize_sread}}
+#' @param key (\code{character}) no longer used??
 #'
 #' @details Both of the inputs should be annotated with identifying columns to
 #' uniquely identify the source \code{\link[dada2:derep-class]{derep}} objects;
-#' this should happen automatically if \code{\link[dada2]{derep}} and
+#' this should happen automatically if \code{\link[dada2]{derepFastq}} and
 #' \code{\link[ShortRead]{readFastq}} are called on a list of filenames (there
 #' will be a column "name" in the outputs of \code{\link{dadamap}} and
 #' \code{\link{summarize_sread}}).
@@ -330,6 +342,7 @@ has_alphabet <- function(seq, alphabet) {
 #' @param names (\code{character}) If \code{seq} is a \code{character} vector,
 #'  names for the sequences.
 #' @param ncpus (\code{integer}) Number of CPUs to use.
+#' @param ... passed to methods
 #'
 #' @details The sequences are first aligned using
 #' \code{\link[DECIPHER]{AlignSeqs}}. Sequences which are "outliers" in the
@@ -349,10 +362,11 @@ has_alphabet <- function(seq, alphabet) {
 #' sequence.
 #' @export
 
-cluster_consensus <- function(seq, ...) UseMethod("cluster_consensus")
+cluster_consensus <- function(seq, ..., ncpus = 1) UseMethod("cluster_consensus")
+#' @param DNA2RNA (logical) whether to convert \code{seq} from DNA to RNA, and use (calculated) RNA secondary structure in alignments.
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.character <- function(seq, names, ncpus = 1, DNA2RNA = TRUE) {
+cluster_consensus.character <- function(seq, names, DNA2RNA = TRUE, ..., ncpus = 1) {
    seq <- rlang::set_names(seq, names)
    seq <- stats::na.omit(seq)
    if (has_alphabet(seq, Biostrings::DNA_ALPHABET)) {
@@ -368,17 +382,17 @@ cluster_consensus.character <- function(seq, names, ncpus = 1, DNA2RNA = TRUE) {
 
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.XStringSet <- function(seq, ncpus = 1) {
+cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1) {
 
    if (length(seq) < 3) return(NA_character_)
 
-   if (is(seq, "RNAStringSet")) {
+   if (methods::is(seq, "RNAStringSet")) {
       mult_align_class <- Biostrings::RNAMultipleAlignment
       seqset_class <- "RNAStringSet"
-   } else if (is(seq, "DNAStringSet")) {
+   } else if (methods::is(seq, "DNAStringSet")) {
       mult_align_class <- Biostrings::DNAMultipleAlignment
       seqset_class <- "DNAStringSet"
-   } else if (is(seq, "AAStringSet")) {
+   } else if (methods::is(seq, "AAStringSet")) {
       mult_align_class <- Biostrings::AAMultipleAlignment
       seqset_class <- "AAStringSet"
    } else {
@@ -407,7 +421,7 @@ cluster_consensus.XStringSet <- function(seq, ncpus = 1) {
    aln <- aln %>%
       Biostrings::RNAMultipleAlignment() %>%
       Biostrings::maskGaps(min.fraction = 0.5, min.block.width = 1) %>%
-      as("RNAStringSet")
+      methods::as("RNAStringSet")
    tictoc::toc()
 
    cat(" Calculating consensus...\n")
@@ -427,6 +441,7 @@ cluster_consensus.XStringSet <- function(seq, ncpus = 1) {
 #' @param region (\code{character}) The region to extract. Should match a value given in \code{positions$region}.
 #' @param region2 (\code{character}) If different from \code{region}, then the entire segment beginning at the start of \code{region} and ending at the end of \code{region2} will be extracted.  For instance, to extract the entire ITS region, use \code{region = 'ITS1', region2 = 'ITS2'}.
 #' @param outfile (\code{character}) If given, the output will be written to the filename given in fasta or fastq format.  The format is determined by \code{seq}, not by the extension of \code{outfile}.
+#' @param ... Passed to methods.
 #'
 #' @return (\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region from each of the input sequences where it was found.
 #' @export
@@ -434,10 +449,11 @@ cluster_consensus.XStringSet <- function(seq, ncpus = 1) {
 extract_region <- function(seq, positions, region, region2 = region, outfile = NULL, ...)
    UseMethod("extract_region")
 
+#' @param qualityType (\code{character}) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.
 #' @rdname extract_region
 #' @export
-extract_region.character <- function(seq, outfile = NULL, positions, region,
-                                     region2 = region,
+extract_region.character <- function(seq, positions, region, region2 = region,
+                                     outfile = NULL,
                                      qualityType = "FastqQuality", ...) {
    assertthat::assert_that(assertthat::is.string(seq),
                            file.exists(seq))
@@ -446,11 +462,17 @@ extract_region.character <- function(seq, outfile = NULL, positions, region,
       seq <- ShortRead::readFastq(seq, qualityType = qualityType)
    } else if (grepl(seq, pattern = "\\.(fasta|fa|fst)(\\.gz)?$")) {
       seq <- ShortRead::readFasta(seq) %>%
-         ShortRead::ShortRead(sread = seq, id = BStringSet(names(seq)))
+         ShortRead::ShortRead(sread = seq,
+                              id = Biostrings::BStringSet(names(seq)))
 
    }
 
-   extract_region.ShortRead(seq, outfile, positions, region, ...)
+   extract_region.ShortRead(seq = seq,
+                            positions = positions,
+                            region = region,
+                            region2 = region2,
+                            outfile = outfile,
+                            ...)
 }
 
 #' @rdname extract_region
@@ -478,7 +500,7 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
 
       # make sure the file exists even if we don't have anything to write.
       if (file.exists(outfile)) file.remove(outfile)
-      if (is(seq, "ShortReadQ")) {
+      if (methods::is(seq, "ShortReadQ")) {
          ShortRead::writeFastq(ShortRead::ShortReadQ(), outfile)
       } else {
          ShortRead::writeFasta(ShortRead::ShortRead())
@@ -503,7 +525,7 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
          start, end) %>%
       dplyr::filter((border == "start" & region == !!region) |
                        (border == "end" & region == region2)) %>%
-      dplyr::mutate(region = "ITS") %>%
+      dplyr::select(-region) %>%
       tidyr::spread(key = "border", value = "loc") %>%
       dplyr::filter(!is.na(start),
                     start > 0,
@@ -511,9 +533,10 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
                     end > 0,
                     # end <= readr::parse_number(length),
                     end > start)
-   idx <- tibble::tibble(seq = as.character(id(seq)),
+
+   idx <- tibble::tibble(seq = as.character(seq@id),
                  idx = seq_along(seq)) %>%
-      dplyr::semi_join(p) %>%
+      dplyr::left_join(dplyr::select(p, "seq"), ., by = "seq") %>%
       dplyr::pull(idx)
 
    if (nrow(p)) {
@@ -525,6 +548,8 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
             ShortRead::writeFasta(out, outfile, mode = "a")
          }
       }
+   } else {
+      out <- seq[FALSE]
    }
    return(out)
 }

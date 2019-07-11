@@ -6,21 +6,25 @@
 \alias{cluster_consensus.XStringSet}
 \title{Calculate consensus of a cluster of sequences.}
 \usage{
-cluster_consensus(seq, ...)
+cluster_consensus(seq, ..., ncpus = 1)
 
-\method{cluster_consensus}{character}(seq, names, ncpus = 1,
-  DNA2RNA = TRUE)
+\method{cluster_consensus}{character}(seq, names, DNA2RNA = TRUE, ...,
+  ncpus = 1)
 
-\method{cluster_consensus}{XStringSet}(seq, ncpus = 1)
+\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1)
 }
 \arguments{
 \item{seq}{(\code{character} vector or \code{\link[Biostrings]{XStringSet}})
 The sequences to calculate a consensus for.}
 
+\item{...}{passed to methods}
+
+\item{ncpus}{(\code{integer}) Number of CPUs to use.}
+
 \item{names}{(\code{character}) If \code{seq} is a \code{character} vector,
 names for the sequences.}
 
-\item{ncpus}{(\code{integer}) Number of CPUs to use.}
+\item{DNA2RNA}{(logical) whether to convert \code{seq} from DNA to RNA, and use (calculated) RNA secondary structure in alignments.}
 }
 \value{
 an \code{\link[Biostrings]{XStringSet}} representing the consensus

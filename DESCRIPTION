@@ -1,21 +1,34 @@
 Package: tzara
 Type: Package
-Title: Cluster long amplicons using dada2 denoising on variable regions.
-Version: 0.1.0.900
-Author@R: person(given = "Brendan", family = "Furneaux", email = "brendan.furneaux@ebc.uu.se", role = c("aut", "cre"))
+Title: Cluster long amplicons using dada2 denoising on variable regions
+Version: 0.0.1
+Authors@R: person(given = "Brendan", family = "Furneaux",
+                  email = "brendan.furneaux@gmail.com",
+                  role = c("aut", "cre"))
 Description: To reduce computational complexity, dada2 only uses non-singletons as seeds for denoising.  For this strategy to work, each true sequence must be represented by at least two identical reads.  Especially with long amplicons, the probability of two reads having exactly the same errors is much lower than the probability of being error-free, so in practice this means that each true sequence must have two error-free reads.  This becomes problematic for rare sequences in long amplicon libraries. An alternative is to use hidden Markov models to cut out the most variable section of the targeted region and use dada2 to create denoised sequences using only that sequence, and then find a consensus sequence for all sequences that match the index region. Tzara (named after Tristan Tzara, a central figure in the Dada art movement) applies this method to rDNA sequences by cutting out the variable ITS2 region using rITSx.
 License: GPL-3
+URL: https://www.github.com/brendanf/tzara
+BugReports: https://www.github.com/brendanf/tzara/issues
 Encoding: UTF-8
 LazyData: true
-Imports: dada2 (>= 1.11)
-Requires:
+Requires: R (>= 3.0.0)
+Imports:
+   utils,
+   methods,
+   backports,
    magrittr,
    dplyr,
+   purrr,
    tidyr,
    tibble,
    digest,
    Biostrings,
    ShortRead,
    DECIPHER,
-   odseq
+   odseq,
+   assertthat,
+   rlang,
+   tictoc
+Enhances: dada2
+Suggests: rITSx
 RoxygenNote: 6.1.1
