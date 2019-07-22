@@ -163,7 +163,8 @@ dadamap.list <- function(derep, dada, ...) {
    args <- list(..., derep = derep, dada = dada)
    if (!is.null(names(derep))) {
       args[["name"]] <- names(derep)
-      args <- dplyr::select(args, "name", dplyr::everything())
+      args <- args[tidyselect::vars_select(names(args), "name",
+                                           tidyselect::everything())]
    }
 
    out <- purrr::pmap_dfr(args, dadamap.derep)
