@@ -282,7 +282,7 @@ summarize_sread.ShortReadQ <- function(sread, ..., max_ee = Inf) {
 #' @export
 summarize_sread.list <- function(sread, ..., max_ee = Inf) {
    out = tibble::tibble(
-      .seqs = lapply(sread, summarize_sread.ShortReadQ(the_sread)),
+      .seqs = lapply(sread, summarize_sread.ShortReadQ, max_ee = max_ee),
       ...)
    if (!is.null(names(sread)) && !hasName(out, "name")) {
       out$name <- names(sread)
