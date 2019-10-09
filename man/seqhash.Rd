@@ -6,11 +6,13 @@
 \alias{seqhash.XStringSet}
 \title{Individually hash biological sequences}
 \usage{
-seqhash(seq, algo = "xxhash32", len = NA)
+seqhash(seq, algo = "xxhash32", len = NA, preserve_NA = TRUE)
 
-\method{seqhash}{character}(seq, algo = "xxhash32", len = NA)
+\method{seqhash}{character}(seq, algo = "xxhash32", len = NA,
+  preserve_NA = TRUE)
 
-\method{seqhash}{XStringSet}(seq, algo = "xxhash32", len = NA)
+\method{seqhash}{XStringSet}(seq, algo = "xxhash32", len = NA,
+  preserve_NA = TRUE)
 }
 \arguments{
 \item{seq}{(\code{character} or \code{\link[Biostrings]{XStringSet}}) the
@@ -20,7 +22,12 @@ sequences to hash.}
 \code{\link[digest]{digest}}. default: "xxhash32"}
 
 \item{len}{(\code{integer}) number of characters to keep from each hash
-string. NA (the default) to keep all characters.}
+string. \code{NA} (the default) to keep all characters.}
+
+\item{preserve_NA}{(\code{logical}) If \code{TRUE}, \code{NA} values in
+\code{seq} are preserved as \code{NA} in the output.  If
+\code{FALSE}, then \code{NA} is passed to
+\code{\link[digest]{digest}}, which results in a valid hash.}
 }
 \value{
 a \code{character} vector of the same length as \code{seq},

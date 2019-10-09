@@ -2,9 +2,10 @@
 utils::globalVariables(c(".", ".seqs", "asv.idx", "asv.seq", "border",
                          "dada.idx", "derep", "derep.idx", "derep.seq", "end",
                          "newmap", "seq.id", "start", "the_sread"))
-
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 `%>%`
+
 
 .onLoad <- function(libname, pkgname) {
    backports::import(pkgname)
@@ -180,17 +181,22 @@ dadamap.list <- function(derep, dada, ...) {
 #' @param algo (\code{character}) a hash algorithm supported by
 #'             \code{\link[digest]{digest}}. default: "xxhash32"
 #' @param len (\code{integer}) number of characters to keep from each hash
-#'            string. NA (the default) to keep all characters.
+#'            string. \code{NA} (the default) to keep all characters.
+#' @param preserve_NA (\code{logical}) If \code{TRUE}, \code{NA} values in
+#'            \code{seq} are preserved as \code{NA} in the output.  If
+#'            \code{FALSE}, then \code{NA} is passed to
+#'            \code{\link[digest]{digest}}, which results in a valid hash.
 #'
 #' @return a \code{character} vector of the same length as \code{seq},
 #'         with the hashed sequences.
 #' @export
-seqhash <- function(seq, algo = "xxhash32", len = NA) UseMethod("seqhash")
+seqhash <- function(seq, algo = "xxhash32", len = NA, preserve_NA = TRUE) UseMethod("seqhash")
 
 #' @rdname seqhash
 #' @export
-seqhash.character <- function(seq, algo = "xxhash32", len = NA) {
+seqhash.character <- function(seq, algo = "xxhash32", len = NA, preserve_NA = TRUE) {
    h <- vapply(seq, digest::digest, "", algo = algo)
+   if (preserve_NA) h[is.na(seq)] <- NA_character_
    if (is.na(len)) {
       return(h)
    } else {
@@ -203,8 +209,8 @@ seqhash.character <- function(seq, algo = "xxhash32", len = NA) {
 
 #' @rdname seqhash
 #' @export
-seqhash.XStringSet <- function(seq, algo = "xxhash32", len = NA) {
-   seqhash.character(as.character(seq), algo = algo, len = len)
+seqhash.XStringSet <- function(seq, algo = "xxhash32", len = NA, preserve_NA = TRUE) {
+   seqhash.character(as.character(seq), algo = algo, len = len, preserve_NA)
 }
 
 #' Add sequence names to a derep object
@@ -343,6 +349,16 @@ has_alphabet <- function(seq, alphabet) {
 #' @param names (\code{character}) If \code{seq} is a \code{character} vector,
 #'  names for the sequences.
 #' @param ncpus (\code{integer}) Number of CPUs to use.
+#' @param simplify (\code{logical}) If \code{TRUE}, return an object of the same
+#'  type as \code{seq} containing a single sequence representing the consensus.
+#'  If \code{FALSE}, an object of the same type as \code{seq} representing the
+#'  consensus sequence for reads which were included in the consensus, or
+#'  \code{NA_character_} for reads which were initially \code{NA} or which were
+#'  removed from the consensus alignment as outliers.  For the
+#'  \code{\link[Biostrings]{XStringSet}} method, which does not allow \code{NA}
+#'  entries, these elements are missing from the set (this can be deduced by
+#'  the names).
+#'
 #' @param ... passed to methods
 #'
 #' @details The sequences are first aligned using
@@ -354,38 +370,43 @@ has_alphabet <- function(seq, alphabet) {
 #' then outliers should mostly be chimeras.
 #'
 #' After outlier removal, sites with greater than 50\% gaps are removed, and
-#' the most frequent base (ignoring gaps) is chosen at all other sites. If no
-#' base has greater than 50\% representation at a position, then an IUPAC
+#' the most frequent letter (ignoring gaps) is chosen at all other sites. If no
+#' letter has greater than 50\% representation at a position, then an IUPAC
 #' ambiguous base representing at least 50\% of the reads at that position is
-#' chosen.
+#' chosen for nucleotide sequences, or \code{"X"} for amino acids.
 #'
 #' @return an \code{\link[Biostrings]{XStringSet}} representing the consensus
 #' sequence.
+#'
 #' @export
 
-cluster_consensus <- function(seq, ..., ncpus = 1) UseMethod("cluster_consensus")
+cluster_consensus <- function(seq, ..., ncpus = 1, simplify = TRUE) UseMethod("cluster_consensus")
 #' @param DNA2RNA (logical) whether to convert \code{seq} from DNA to RNA, and use (calculated) RNA secondary structure in alignments.
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.character <- function(seq, names, DNA2RNA = TRUE, ..., ncpus = 1) {
+cluster_consensus.character <- function(seq, names = names(seq), DNA2RNA = TRUE, ..., ncpus = 1, simplify = TRUE) {
    seq <- rlang::set_names(seq, names)
-   seq <- stats::na.omit(seq)
-   if (has_alphabet(seq, Biostrings::DNA_ALPHABET)) {
-      seq <- Biostrings::DNAStringSet(seq)
+   xss <- seq[!is.na(seq)]
+   if (has_alphabet(xss, Biostrings::DNA_ALPHABET)) {
+      xss <- Biostrings::DNAStringSet(xss)
       if (DNA2RNA) {
-         seq <- Biostrings::RNAStringSet(seq)
+         xss <- Biostrings::RNAStringSet(xss)
       }
-   } else if (has_alphabet(seq, Biostrings::RNA_ALPHABET)) {
-      seq <- Biostrings::RNAStringSet(seq)
+   } else if (has_alphabet(xss, Biostrings::RNA_ALPHABET)) {
+      xss <- Biostrings::RNAStringSet(xss)
    }
-   cluster_consensus.XStringSet(seq, ncpus)
+   result <- cluster_consensus.XStringSet(xss, ncpus = ncpus, simplify = simplify)
+   if (simplify) return(as.character(result))
+   seq[] <- NA_character_
+   seq[names(result)] <- as.character(result)
+   seq
 }
 
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1) {
+cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1, simplify = TRUE) {
 
-   if (length(seq) < 3) return(NA_character_)
+   if (length(seq) < 3) return(seq[FALSE])
 
    if (methods::is(seq, "RNAStringSet")) {
       mult_align_class <- Biostrings::RNAMultipleAlignment
@@ -428,11 +449,18 @@ cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1) {
    cat(" Calculating consensus...\n")
    tictoc::tic("  consensus")
    on.exit(tictoc::toc(), add = TRUE)
-   DECIPHER::ConsensusSequence(aln,
-                               threshold = 0.5,
-                               ambiguity = TRUE,
-                               ignoreNonBases = TRUE,
-                               includeTerminalGaps = FALSE)
+   result <- DECIPHER::ConsensusSequence(
+      aln,
+      threshold = 0.5,
+      ambiguity = TRUE,
+      ignoreNonBases = TRUE,
+      includeTerminalGaps = FALSE
+   )
+   if (simplify) return(result)
+
+   result <- rep(result, length(aln))
+   names(result) <- names(aln)
+   result
 }
 
 #' Extract regions from a set of sequences (maybe with qualities)
@@ -450,14 +478,43 @@ cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1) {
 extract_region <- function(seq, positions, region, region2 = region, outfile = NULL, ...)
    UseMethod("extract_region")
 
-#' @param qualityType (\code{character}) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.
+#' @param qualityType (\code{character} scalar) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.
+#' @param append (\code{logical} scalar) if \code{TRUE}, then data is appended to
+#'        \code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
+#'        overwritten.
 #' @rdname extract_region
 #' @export
 extract_region.character <- function(seq, positions, region, region2 = region,
                                      outfile = NULL,
-                                     qualityType = "FastqQuality", ...) {
+                                     qualityType = "FastqQuality", append = FALSE, ...) {
+   assertthat::assert_that(assertthat::is.flag(append))
+
+   if (length(seq) > 1) {
+      assertthat::assert_that(length(positions) == length(seq))
+      if (!is.null(outfile) && !append) unlink(outfile)
+      out <- purrr::map2(
+         .x = seq,
+         .y = positions,
+         .f = extract_region.character,
+         region = region,
+         region2 = region2,
+         outfile = outfile,
+         qualityType = qualityType,
+         append = TRUE,
+         ...
+      )
+      return(purrr::reduce(out, ShortRead::append))
+   }
+
    assertthat::assert_that(assertthat::is.string(seq),
                            file.exists(seq))
+
+   assertthat::assert_that(is.data.frame(positions) || is.list(positions))
+   if (!is.data.frame(positions)) {
+      assertthat::assert_that(length(positions) == length(seq))
+      positions <- positions[[1]]
+      assertthat::assert_that(is.data.frame(positions))
+   }
 
    if (grepl(seq, pattern = "\\.fastq(\\.gz)?$")) {
       seq <- ShortRead::readFastq(seq, qualityType = qualityType)
@@ -479,7 +536,7 @@ extract_region.character <- function(seq, positions, region, region2 = region,
 #' @rdname extract_region
 #' @export
 extract_region.ShortRead <- function(seq, positions, region, region2 = region,
-                                     outfile = NULL, ...) {
+                                     outfile = NULL, append = FALSE, ...) {
 
    assertthat::assert_that(
       assertthat::is.string(region),
@@ -504,7 +561,7 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
       if (methods::is(seq, "ShortReadQ")) {
          ShortRead::writeFastq(ShortRead::ShortReadQ(), outfile)
       } else {
-         ShortRead::writeFasta(ShortRead::ShortRead())
+         ShortRead::writeFasta(ShortRead::ShortRead(), outfile)
       }
    }
 
@@ -555,4 +612,472 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
    return(out)
 }
 
+extract_region.list <- function(seq, positions, region, region2 = region,
+                                     outfile = NULL, ...) {
+
+   assertthat::assert_that(length(positions) == length(seq))
+   if (!is.null(outfile) && !append) unlink(outfile)
+   out <- purrr::map2(
+      .x = seq,
+      .y = positions,
+      .f = extract_region,
+      region = region,
+      region2 = region2,
+      outfile = outfile,
+      append = TRUE,
+      ...
+   )
+   purrr::reduce(out, ShortRead::append)
+}
+
 # TODO add methods for DNAStringSet, QualityScaledDNAStringSet
+
+#' Reconstruct a longer region out of ASVs or consensus sequence of individual
+#' domains.
+#'
+#' The sequences from each denoised sub-region/domain are concatenated to create
+#' a denoised sequence
+#' for the long region.  Additionally, de-novo bimera detection is performed
+#' using \code{\link[dada2]{isBimeraDenovo}} or
+#' \code{\link[dada2]{isBimeraDenovoTable}} on
+#' sets of three consecutive sub-regions/domains; in the intended application,
+#' these sets will be variable--conserved--variable.
+#'
+#' When not all sub-regions/domains for a given read have been successfully
+#' denoised with DADA, then the missing regions are constructed using
+#' \code{\link{cluster_consensus}}.
+#'
+#' @param seqtabs (\code{list} of \code{data.frame}) with columns
+#'  \code{read_column}, \code{asv_column}, and optionally \code{sample_column}.
+#'  Any additional columns are ignored.  \code{read_column} should give a unique ID
+#'  for each sequencing read, and \code{asv_column} should give the denoised
+#'  sequence for the read.
+#' @param regions  (\code{character} vector with the same length as \code{seqtabs})
+#'  The names of the regions/domains represented by each of the tables in
+#'  \code{seqtabs}.  If not supplied, then \code{seqtabs} should be named by the
+#'  regions.
+#' @param output (\code{character} vector of lenth one) The name of the output
+#'  region.  If this region is also given in \code{seqtabs}, then the value from
+#'  \code{seqtabs} will be used as a backup if one or more of the
+#'  sub-regions/domains is missing.
+#' @param order (\code{character} vector) The order in which the sub-regions/domains
+#'  should be concatenated to produce the output.
+#' @param read_column (\code{character} vector of length one) Column name from
+#'  the \code{seqtabs} which uniquely identifies each read (but different
+#'  regions extracted from the same read should have the same ID.)
+#' @param asv_column (\code{character} vector of length one) Column name from
+#'  the \code{seqtabs} which gives the denoised sequences.
+#' @param rawtabs (\code{list} of \code{data.frame}) Data sources of the same
+#'  format as \code{seqtabs}, with columns \code{read_column} and
+#'  \code{seq_column}.  These should be of the same number as \code{seqtabs},
+#'  and correspond to the sub-regions/domains specified in \code{regions}.  The
+#'  default is to find \code{raw_column} in \code{seqtabs}.
+#' @param raw_column (\code{character} vector of length one, or \code{NULL})
+#'  Column name from the \code{seqtabs} which gives the raw sequences.  If
+#'  \code{NULL} or \code{NA_character_}, then consensus sequences will not be
+#'  used as a  backup when no denoised sequence is present.
+#' @param sample_column (\code{character} vector of length one, or \code{NULL})
+#'  An optional column name from the \code{seqtabs} which identifies which
+#'  sample each sequence is from.  If given, this is used (after possible
+#'  modification by \code{sample_regex} and \code{sample_replace}) to identify
+#'  different samples for \code{\link[dada2]{isBimeraDenovoTable}}.
+#'  \code{NA_character} is treated the same way as \code{NULL}.
+#' @param sample_regex (\code{character} vector of length one, or \code{NULL}) A
+#'  \link[stringi:stringi-search-regex]{regular expression}. If
+#'  \code{sample_regex} is given but \code{sample_replace} is not, then only the
+#'  part of the entries in \code{sample_column} matching the regex
+#'  are used to define samples (using \code{\link[stringr]{str_extract}}).  If
+#'  \code{sample_replace} is also used, then the regex is instead replaced by
+#'  \code{sample_replace} (using \code{\link[stringr]{str_replace}}).
+#'  \code{NA_character} is treated the same way as \code{NULL}.
+#' @param sample_replace (\code{character} vector of length one, or \code{NULL})
+#'  Replacement string for \code{sample_regex}.
+#'  \code{NA_character} is treated the same way as \code{NULL}.
+#' @param chimera_offset (\code{integer}) By default, bimeras are checked for
+#' sub-region/domains 1, 2, 3; 3, 4, 5; 5, 6, 7; etc. This is appropriate if
+#' the domains alternate variable, conserved, variable, etc.  If a more
+#' conserved domain is first, use \code{chimera_offset = 1}.
+#' @param ... additional arguments passed to \code{\link[dada2]{isBimeraDenovo}}
+#'  or \code{\link[dada2]{isBimeraDenovoTable}}.
+#'
+#' @return a \code{\link[tibble]{tibble}} with column "\code{seq.id}" and
+#' \code{sample_column} (if given), as well as one column for each value of
+#' \code{regions} and \code{output}, representing the sub-regions/domains and
+#' the concatenated full region.
+#' @export
+reconstruct <- function(
+   seqtabs,
+   regions = names(seqtabs),
+   output = "concat",
+   order = setdiff(regions, output),
+   read_column = "seq.id",
+   asv_column = "dada.seq",
+   rawtabs = seqtabs,
+   raw_column = NULL,
+   sample_column = NULL,
+   sample_regex = NULL,
+   sample_replace = NULL,
+   chimera_offset = 0,
+   ...)
+{
+   assertthat::assert_that(is.null(raw_column) || assertthat::is.string(raw_column))
+
+   if (is.null(raw_column) || is.na(raw_column)) raw_column <- NULL
+
+   region_table <- assemble_region_table(
+      seqtabs = seqtabs,
+      regions = regions,
+      output = output,
+      order = order,
+      read_column = read_column,
+      seq_column = asv_column,
+      sample_column = sample_column,
+      sample_regex = sample_regex,
+      sample_replace = sample_replace
+   )
+
+   out <- remove_region_chimeras(
+      region_table = region_table,
+      order = order,
+      sample_column = sample_column,
+      chimera_offset = chimera_offset)
+
+   if (!is.null(raw_column)) {
+      raw_table <- assemble_region_table(
+         seqtabs = rawtabs,
+         regions = regions,
+         output = output,
+         order = order,
+         read_column = read_column,
+         seq_column = raw_column,
+         sample_column = sample_column,
+         sample_regex = sample_regex,
+         sample_replace = sample_replace
+      )
+      raw_table <- dplyr::semi_join(raw_table, out, by = read_column)
+
+      out <- consensus_missing_regions(
+         region_table = out,
+         raw_table = raw_table,
+         order = order,
+         read_column = read_column,
+         ...
+      )
+   }
+
+   if (output %in% regions) {
+      out[["_concat_"]] <- do.call(stringr::str_c, out[,order])
+      out[[output]] <- dplyr::coalesce(out[[output]], out[["_concat_"]])
+      out[["_concat_"]] <- NULL
+   } else {
+      out[[output]] <- do.call(stringr::str_c, out[,order])
+   }
+   out
+}
+
+assemble_region_table <- function(
+   seqtabs,
+   regions = names(seqtabs),
+   output = "concat",
+   order = setdiff(regions, output),
+   read_column = "seq.id",
+   seq_column = "dada.seq",
+   sample_column = NULL,
+   sample_regex = NULL,
+   sample_replace = NULL
+) {
+   assertthat::assert_that(
+      assertthat::is.string(read_column),
+      assertthat::is.string(seq_column),
+      is.null(sample_column) || is.na(sample_column) ||
+         assertthat::is.string(sample_column),
+      is.null(sample_regex) || is.na(sample_regex) ||
+         assertthat::is.string(sample_regex),
+      is.null(sample_replace) || is.na(sample_replace) ||
+         assertthat::is.string(sample_replace)
+   )
+
+   if (is.null(sample_column) || is.na(sample_column)) sample_column <- NULL
+   if (is.null(sample_regex) || is.na(sample_regex)) sample_regex <- NULL
+   if (is.null(sample_replace) || is.na(sample_replace)) sample_replace <- NULL
+
+   seqtabs <- purrr::map2(
+      seqtabs,
+      regions,
+      function(st, reg) magrittr::set_names(
+         st[,c(sample_column, read_column, seq_column)],
+         c(sample_column, read_column, reg)))
+   seqtabs <- purrr::map(
+      unique(regions) %>% magrittr::set_names(., .),
+      function(r) {
+         dplyr::bind_rows(seqtabs[regions == r])
+      }
+   )
+   if (!is.null(sample_regex)) {
+      if (is.null(sample_column)) stop("If sample_regex is give, sample_column must also be given.")
+      if (is.null(sample_replace)) {
+         seqtabs <- purrr::map(
+            seqtabs,
+            dplyr::mutate_at,
+            sample_column,
+            stringr::str_extract,
+            sample_regex
+         )
+      } else {
+         seqtabs <- purrr::map(
+            seqtabs,
+            dplyr::mutate_at,
+            sample_column,
+            stringr::str_replace,
+            sample_regex,
+            sample_replace
+         )
+      }
+   }
+
+   if (is.null(sample_column) || is.na(sample_column)) sample_column <- NULL
+   if (is.null(sample_regex) || is.na(sample_regex)) sample_regex <- NULL
+   if (is.null(sample_replace) || is.na(sample_replace)) sample_replace <- NULL
+
+   out <- purrr::reduce(
+      seqtabs[order],
+      dplyr::full_join,
+      by = c(sample_column, read_column)
+   )
+   if (output %in% regions) {
+      out <-
+         dplyr::full_join(out, seqtabs[[output]], by = c(sample_column, read_column))
+   }
+   out
+}
+
+remove_region_chimeras <- function(
+   region_table,
+   order,
+   sample_column = NULL,
+   chimera_offset = 0,
+   ...
+) {
+   for (i in seq(1 + chimera_offset, max(1, length(order) - 2), 2)) {
+      chimset <- order[i:min(length(order), i + 2)]
+      seqs <- do.call(stringr::str_c, region_table[,chimset])
+      chims <-
+         if (!is.null(sample_column)) {
+            tibble::tibble(sample = region_table[[sample_column]], seq = seqs) %>%
+               dplyr::filter(!is.na(seq)) %>%
+               dplyr::group_by(sample, seq) %>%
+               dplyr::summarize(nread = dplyr::n()) %>%
+               dplyr::ungroup() %>%
+               tidyr::spread(seq, "nread", fill = 0L) %>%
+               tibble::column_to_rownames("sample") %>%
+               as.matrix() %>%
+               dada2::isBimeraDenovoTable(...)
+         } else {
+            table(seqs) %>%
+            {tibble::tibble(abundance = ., sequence = names(.))} %>%
+               dada2::isBimeraDenovo(...)
+         }
+      chims <- names(chims)[chims]
+      futile.logger::flog.info(
+         "Removing %d/%d reads of %d/%d chimeric sequences from domains: %s.",
+         sum(seqs %in% chims),
+         length(seqs),
+         length(chims),
+         dplyr::n_distinct(seqs, na.rm = TRUE),
+         paste(chimset, collapse = ", ")
+      )
+      region_table <- region_table[!seqs %in% chims,]
+   }
+   region_table
+}
+
+block_consensus <- function(.x, .y, reg, reg2, reg2_raw, read_column, ...) {
+   if (length(.y[[reg]]) == 0 || is.na(.y[[reg]])) return(.x)
+   .x[[reg2]] <- map_or_consensus(
+      asvs = .x[[reg2]],
+      raw = .x[[reg2_raw]],
+      names = .x[[read_column]],
+      ...
+   )
+   .x
+}
+
+consensus_missing_regions <- function(
+   region_table,
+   raw_table,
+   order,
+   maxdist = 10,
+   read_column = "seq.id",
+   ...
+) {
+   # all combinations of ASV sequences
+   combos <- dplyr::group_by_at(region_table, order) %>%
+      dplyr::summarize(nreads = dplyr::n()) %>%
+      dplyr::ungroup()
+
+   # how many variants do we have for each region?
+   # sort decreasing, because we want to start with the most variable region
+   region_counts <- vapply(
+      order,
+      function(x) dplyr::n_distinct(combos[[x]], na.rm = TRUE),
+      1L
+   ) %>%
+      sort(decreasing = TRUE)
+
+   out_table <- dplyr::left_join(region_table, raw_table, by = read_column,
+                                 suffix = c("", "_raw"))
+
+   for (reg in names(region_counts)) {
+      futile.logger::flog.info("Starting to process %s clusters.", reg)
+      out_table <- dplyr::group_by_at(out_table, reg)
+      regstats <- dplyr::summarise_at(
+         out_table,
+         setdiff(order, reg),
+         list(
+            n_na = ~sum(is.na(.)),
+            all_na = ~all(is.na(.)),
+            n = length
+         )
+      )
+      for (reg2 in setdiff(order, reg)) {
+         all_na <- paste0(reg2, "_all_na")
+         n_na <- paste0(reg2, "_n_na")
+         futile.logger::flog.info(
+            "Interpolating ASVs for %s.", reg2)
+         futile.logger::flog.info(
+            "%d missing reads found in %d clusters with ASVs",
+            sum(regstats[[n_na]][!regstats[[all_na]] & !is.na(regstats[[reg]])]),
+            sum(!regstats[[all_na]] & !is.na(regstats[[reg]]))
+         )
+         futile.logger::flog.info(
+            "%d missing reads found in %d clusters with no ASVs.",
+            sum(regstats[[n_na]][regstats[[all_na]] & !is.na(regstats[[reg]])]),
+            sum(regstats[[all_na]] & !is.na(regstats[[reg]]))
+         )
+         reg2_raw <- paste0(reg2, "_raw")
+         out_table <- dplyr::group_map(
+            .tbl = out_table,
+           .f = block_consensus,
+            reg = reg,
+            reg2 = reg2,
+            reg2_raw = reg2_raw,
+            read_column = read_column,
+            ...,
+            keep = TRUE
+         ) %>%
+            dplyr::bind_rows()
+      }
+      futile.logger::flog.info("Finished processing %s clusters.", reg)
+   }
+   dplyr::select_at(out_table, names(region_table))
+}
+
+#' Replace unmapped raw reads with the nearest ASV
+#'
+#' @param asvs (\code{character} vector) ASV sequences mapped to a set of reads.
+#'    Should be \code{\link{NA_character_}} for reads which did not map to an
+#'    ASV.
+#' @param raw (\code{character} vector) Raw read sequences for the same set of
+#'    reads as \code{asvs}.  May be \code{\link{NA_character_}}
+#' @param maxdist (\code{numeric} scalar) Maximum Levenshtein distance between
+#'    a raw read and an ASV for the read to be mapped to the ASV.
+#'
+#' @return a \code{character} vector the same length as \code{asvs}, which has
+#'    the closest ASV for each read.
+#'
+#' @details The value for element \code{i} of the result is determined as follows:
+#'   \enumerate{
+#'     \item{\code{asvs[i]} is non-\code{NA}: the value from \code{asvs} is used.}
+#'     \item{\code{asvs[i]} and \code{raw[i]} are both \code{NA}: \code{\link{NA_character_}}}
+#'     \item{\code{asvs[i]} is \code{NA}, \code{raw[i]} is non-\code{NA}: \enumerate{
+#'       \item{\code{raw[i]} is less than \code{maxdist} in edit distance from at
+#'       least one of the non-\code{NA} sequences in \code{asvs}: the value from \code{asvs} which has the smallest edit distance from \code{raw[i]} is used}
+#'       \item{\code{raw[i]} is not less than \code{maxdist} in edit distance from at least one of the non-\code{NA} sequences in \code{asvs}: \code{NA_character_}}}}}
+#'
+#' @export
+map_to_best_asv <- function(asvs, raw, maxdist = 10) {
+   assertthat::assert_that(
+      is.character(asvs),
+      is.character(raw),
+      length(asvs) == length(raw),
+      assertthat::is.number(maxdist),
+      maxdist >= 0
+   )
+   if (!anyNA(asvs)) return(asvs)
+
+   unique_asvs <- purrr::discard(unique(asvs), is.na)
+   required_raw <- raw[is.na(asvs)]
+   unique_raw <- purrr::discard(unique(required_raw), is.na)
+   if (length(unique_raw) == 0) return(asvs)
+
+   d <- adist(unique_raw, unique_asvs)
+   replace_table <- tibble::tibble(
+      raw = unique_raw,
+      match = unique_asvs[apply(d, MARGIN = 1, which.min)],
+      dist = apply(d, MARGIN = 1, min)
+   )
+   replace_table <- dplyr::filter(
+      replace_table,
+      .data$dist <= maxdist
+   )
+   out <- dplyr::left_join(tibble::tibble(raw = raw), replace_table, by = "raw")
+   dplyr::coalesce(asvs, out$match)
+}
+
+
+#' Assign consensus sequences to unmapped reads
+#'
+#' This function is intended to be run on reads from a single sub-region/domain,
+#' which have been clustered using a linked sub-region/domain; for instance,
+#' ITS1 reads clustered based on identity/similarity of the linked ITS2 reads.
+#'
+#' If some of the target reads have been mapped to ASVs, then
+#' \code{map_or_consensus} attempts to map additional raw reads to the same
+#' ASVs using a (potentially) more relaxed criteria than
+#' \code{\link[dada2]{dada}}. This is implemented in
+#' \code{\link{map_to_best_asv}}.
+#'
+#' If, on the other hand, none of the input sequences have been assigned to an
+#' ASV, then the entire group is taken to represent one cluster, and a consensus
+#' sequence for the cluster is determined using \code{\link{cluster_consensus}}.
+#' This process will remove outliers (generally chimeric in origin) and assign
+#' \code{NA_character_} to the associated reads, as well as any reads which are
+#' already \code{NA} due to quality filtering, failed region extraction, etc.
+#'
+#' @param asvs (\code{character} vector) ASV sequences mapped to a set of reads.
+#'    Should be \code{\link{NA_character_}} for reads which did not map to an
+#'    ASV.
+#' @param raw (\code{character} vector) Raw read sequences for the same set of
+#'    reads as \code{asvs}.  May be \code{\link{NA_character_}}
+#' @param maxdist (\code{numeric} scalar) Maximum Levenshtein distance between
+#'    a raw read and an ASV for the read to be mapped to the ASV.
+#' @param ... passed to \code{\link{cluster_consensus.character}}
+#'
+#' @return a \code{character} vector the same length as \code{asvs}, which has
+#'    the closest ASV for each read if any ASVs are non-missing, or the cluster
+#'    consensus values for raw reads which were non-missing and not outliers.
+#' @export
+map_or_consensus <- function(asvs, raw, maxdist = 10, ...) {
+   assertthat::assert_that(
+      is.character(asvs),
+      is.character(raw),
+      length(asvs) == length(raw),
+      assertthat::is.number(maxdist),
+      maxdist >= 0
+   )
+
+   if (all(is.na(asvs))) {
+      futile.logger::flog.debug(
+         "Attempting to build consensus for %d sequences.",
+         length(raw)
+      )
+      cluster_consensus(raw, simplify = FALSE, ...)
+   } else {
+      futile.logger::flog.debug(
+         "Attempting to assign %d sequences to %d ASVs.",
+         sum(is.na(asvs) & !is.na(raw)),
+         sum(!is.na(unique(asvs)))
+      )
+      map_to_best_asv(asvs, raw, maxdist)
+   }
+}

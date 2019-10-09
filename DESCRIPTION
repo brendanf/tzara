@@ -1,7 +1,7 @@
 Package: tzara
 Type: Package
 Title: Cluster long amplicons using dada2 denoising on variable regions
-Version: 0.0.4
+Version: 0.0.5
 Authors@R: person(given = "Brendan", family = "Furneaux",
                   email = "brendan.furneaux@gmail.com",
                   role = c("aut", "cre"))
@@ -21,6 +21,8 @@ Imports:
    tidyselect,
    purrr,
    tidyr,
+   stringr,
+   futile.logger,
    tibble,
    digest,
    Biostrings,

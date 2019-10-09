@@ -6,12 +6,13 @@
 \alias{cluster_consensus.XStringSet}
 \title{Calculate consensus of a cluster of sequences.}
 \usage{
-cluster_consensus(seq, ..., ncpus = 1)
+cluster_consensus(seq, ..., ncpus = 1, simplify = TRUE)
 
-\method{cluster_consensus}{character}(seq, names, DNA2RNA = TRUE, ...,
-  ncpus = 1)
+\method{cluster_consensus}{character}(seq, names = names(seq),
+  DNA2RNA = TRUE, ..., ncpus = 1, simplify = TRUE)
 
-\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1)
+\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1,
+  simplify = TRUE)
 }
 \arguments{
 \item{seq}{(\code{character} vector or \code{\link[Biostrings]{XStringSet}})
@@ -20,6 +21,16 @@ The sequences to calculate a consensus for.}
 \item{...}{passed to methods}
 
 \item{ncpus}{(\code{integer}) Number of CPUs to use.}
+
+\item{simplify}{(\code{logical}) If \code{TRUE}, return an object of the same
+type as \code{seq} containing a single sequence representing the consensus.
+If \code{FALSE}, an object of the same type as \code{seq} representing the
+consensus sequence for reads which were included in the consensus, or
+\code{NA_character_} for reads which were initially \code{NA} or which were
+removed from the consensus alignment as outliers.  For the
+\code{\link[Biostrings]{XStringSet}} method, which does not allow \code{NA}
+entries, these elements are missing from the set (this can be deduced by
+the names).}
 
 \item{names}{(\code{character}) If \code{seq} is a \code{character} vector,
 names for the sequences.}
@@ -47,8 +58,8 @@ appropriately quality filtered prior to running \code{\link[dada2]{dada}},
 then outliers should mostly be chimeras.
 
 After outlier removal, sites with greater than 50\% gaps are removed, and
-the most frequent base (ignoring gaps) is chosen at all other sites. If no
-base has greater than 50\% representation at a position, then an IUPAC
+the most frequent letter (ignoring gaps) is chosen at all other sites. If no
+letter has greater than 50\% representation at a position, then an IUPAC
 ambiguous base representing at least 50\% of the reads at that position is
-chosen.
+chosen for nucleotide sequences, or \code{"X"} for amino acids.
 }

@@ -11,10 +11,10 @@ extract_region(seq, positions, region, region2 = region,
 
 \method{extract_region}{character}(seq, positions, region,
   region2 = region, outfile = NULL, qualityType = "FastqQuality",
-  ...)
+  append = FALSE, ...)
 
 \method{extract_region}{ShortRead}(seq, positions, region,
-  region2 = region, outfile = NULL, ...)
+  region2 = region, outfile = NULL, append = FALSE, ...)
 }
 \arguments{
 \item{seq}{(\code{character} (a file name) or a \code{\link[ShortRead:ShortRead-class]{ShortRead}} object) the sequences to extract regions from.}
@@ -29,7 +29,11 @@ extract_region(seq, positions, region, region2 = region,
 
 \item{...}{Passed to methods.}
 
-\item{qualityType}{(\code{character}) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.}
+\item{qualityType}{(\code{character} scalar) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.}
+
+\item{append}{(\code{logical} scalar) if \code{TRUE}, then data is appended to
+\code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
+overwritten.}
 }
 \value{
 (\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region from each of the input sequences where it was found.
