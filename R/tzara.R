@@ -530,6 +530,7 @@ extract_region.character <- function(seq, positions, region, region2 = region,
                             region = region,
                             region2 = region2,
                             outfile = outfile,
+                            append = append,
                             ...)
 }
 
@@ -557,11 +558,13 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
       assertthat::assert_that(dir.exists(dirname(outfile)))
 
       # make sure the file exists even if we don't have anything to write.
-      if (file.exists(outfile)) file.remove(outfile)
-      if (methods::is(seq, "ShortReadQ")) {
-         ShortRead::writeFastq(ShortRead::ShortReadQ(), outfile)
-      } else {
-         ShortRead::writeFasta(ShortRead::ShortRead(), outfile)
+      if (file.exists(outfile) && !isTRUE(append)) file.remove(outfile)
+      if (!file.exists(outfile)) {
+         if (methods::is(seq, "ShortReadQ")) {
+            ShortRead::writeFastq(ShortRead::ShortReadQ(), outfile)
+         } else {
+            ShortRead::writeFasta(ShortRead::ShortRead(), outfile)
+         }
       }
    }
 
