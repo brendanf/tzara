@@ -2,6 +2,21 @@
 
 language: R
 cache: packages
+r_binary_packages:
+   - magrittr
+   - dplyr
+   - tidyselect
+   - purrr
+   - tidyr
+   - stringr
+   - futile.logger
+   - tibble
+   - digest
+   - assertthat
+   - rlang
+   - tictoc
+   - Biostrings
+   - ShortRead
 r_github_packages:
    - jimhester/lintr
    - brendanf/rITSx
