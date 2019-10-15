@@ -17,6 +17,55 @@ r_binary_packages:
    - tictoc
    - testthat
    - backports
+   - matrixStats
+   - bit
+   - prettyunits
+   - bit64
+   - blob
+   - memoise
+   - snow
+   - bitops
+   - RCurl
+   - RColorBrewer
+   - kernlab
+   - e1071
+   - LiblineaR
+   - apcluster
+   - RSQlite
+   - DBI
+   - hwriter
+   - latticeExtra
+   - mclust
+   - pkgconfig
+   - clipr
+   - readr
+   - hms
+   - rex
+   - cyclocomp
+   - rstudioapi
+   - httr
+   - jsonlite
+   - knitr
+   - xml2
+   - xmlparsedata
+   - lazyeval
+   - callr
+   - desc
+   - curl
+   - mime
+   - openssl
+   - highr
+   - markdown
+   - yaml
+   - xfun
+   - processx
+   - ps
+   - rprojroot
+   - askpass
+   - sys
+   - crayon
+   - withr
+   - yaml
 r_github_packages:
    - jimhester/lintr
    - brendanf/rITSx
