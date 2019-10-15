@@ -2,12 +2,15 @@
 % Please edit documentation in R/tzara.R
 \name{combine_derep}
 \alias{combine_derep}
-\title{Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into a master map}
+\title{Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into master map}
 \usage{
 combine_derep(dereps, .data = NULL, ...)
 }
 \arguments{
-\item{dereps}{a (possibly named) \code{list} of (\code{\link[dada2:derep-class]{derep}} objects), or a \code{\link[tibble]{tibble}} with a column "derep" containing such a list.}
+\item{dereps}{a (possibly named) \code{list} of
+(\code{\link[dada2:derep-class]{derep}} objects), or a
+\code{\link[tibble]{tibble}} with a column "derep" containing such a
+list.}
 
 \item{.data}{a \code{\link[tibble]{tibble}} with the same number of rows as
 the length of \code{dereps}.}
@@ -27,10 +30,11 @@ the length of \code{dereps}.}
   }
 }
 \description{
-Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into a master map
+Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into master map
 }
 \details{
-To be useful for further analysis, each sequence should be uniquely identified.  This can be done in several ways:
+To be useful for further analysis, each sequence should be uniquely
+ identified.  This can be done in several ways:
   \itemize{
     \item{\code{dereps} is a named \code{list} with unique names;}
     \item{\code{dereps} is a \code{\link[tibble]{tibble}} with columns (other

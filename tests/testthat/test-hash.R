@@ -8,10 +8,10 @@ test_that("seqhash makes hashes", {
    )
 })
 
-test_that("preserve_NA works", {
+test_that("preserve_na works", {
    expect_equivalent(seqhash(NA_character_), NA_character_)
    expect_equivalent(
-      seqhash(NA_character_, preserve_NA = FALSE),
+      seqhash(NA_character_, preserve_na = FALSE),
       digest::digest(NA_character_, algo = "xxhash32")
    )
    expect_equivalent(

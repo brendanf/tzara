@@ -42,10 +42,11 @@ filename given in fasta or fastq format.  The format is determined by
 
 \item{...}{Passed to methods.}
 
-\item{qualityType}{(\code{character} scalar) fastq file quality encoding; see \code{\link[ShortRead]{readFastq}}.}
+\item{qualityType}{(\code{character} scalar) fastq file quality encoding; see
+\code{\link[ShortRead]{readFastq}}.}
 
-\item{append}{(\code{logical} scalar) if \code{TRUE}, then data is appended to
-\code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
+\item{append}{(\code{logical} scalar) if \code{TRUE}, then data is appended
+to \code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
 overwritten.}
 }
 \value{

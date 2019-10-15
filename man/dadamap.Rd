@@ -7,7 +7,8 @@
 dadamap(derep, dada, ...)
 }
 \arguments{
-\item{derep}{a \code{\link[dada2]{derep-class}} object or list of such objects}
+\item{derep}{a \code{\link[dada2]{derep-class}} object or list of such
+objects}
 
 \item{dada}{(\link[dada2]{dada-class} object or list of such objects) the
 results of a call to \code{\link[dada2]{dada}} on \code{derep}}
@@ -23,8 +24,8 @@ a \code{\link[tibble]{tibble}} with columns:
     Otherwise absent unless provided in \code{...}.}
     \item{\code{...} (\code{character})}{any additional arguments, passed on
       to \code{\link[tibble]{tibble}}}
-    \item{\code{$seq.id} (\code{character})}{the sequence identifiers from the
-      original fasta/q file.}
+    \item{\code{$seq.id} (\code{character})}{the sequence identifiers from
+      the original fasta/q file.}
     \item{\code{$derep.idx} (\code{integer})}{the index of each sequence in
       \code{derep$uniques}.}
     \item{\code{$derep.seq} (\code{character})}{the sequences.}

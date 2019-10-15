@@ -9,7 +9,7 @@
 cluster_consensus(seq, ..., ncpus = 1, simplify = TRUE)
 
 \method{cluster_consensus}{character}(seq, names = names(seq),
-  DNA2RNA = TRUE, ..., ncpus = 1, simplify = TRUE)
+  dna2rna = TRUE, ..., ncpus = 1, simplify = TRUE)
 
 \method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1,
   simplify = TRUE)
@@ -35,7 +35,8 @@ set (this can be deduced by the names).}
 \item{names}{(\code{character}) If \code{seq} is a \code{character} vector,
 names for the sequences.}
 
-\item{DNA2RNA}{(logical) whether to convert \code{seq} from DNA to RNA, and use (calculated) RNA secondary structure in alignments.}
+\item{dna2rna}{(logical) whether to convert \code{seq} from DNA to RNA, and
+use (calculated) RNA secondary structure in alignments.}
 }
 \value{
 an \code{\link[Biostrings]{XStringSet}} representing the consensus

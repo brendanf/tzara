@@ -17,25 +17,25 @@ reconstruct(seqtabs, regions = names(seqtabs), regions_regex = NULL,
 \arguments{
 \item{seqtabs}{(\code{list} of \code{data.frame}) with columns
 \code{read_column}, \code{asv_column}, and optionally \code{sample_column}.
-Any additional columns are ignored.  \code{read_column} should give a unique ID
-for each sequencing read, and \code{asv_column} should give the denoised
+Any additional columns are ignored.  \code{read_column} should give a unique
+ID for each sequencing read, and \code{asv_column} should give the denoised
 sequence for the read.}
 
-\item{regions}{(\code{character} vector with the same length as \code{seqtabs})
-The names of the regions/domains represented by each of the tables in
-\code{seqtabs}.  If not supplied, then \code{seqtabs} should be named by the
-regions.}
+\item{regions}{(\code{character} vector with the same length as
+\code{seqtabs}) The names of the regions/domains represented by each of the
+tables in \code{seqtabs}.  If not supplied, then \code{seqtabs} should be
+named by the regions.}
 
-\item{regions_regex}{(\code{character} vector of length one, or \code{NULL}) A
-\link[stringi:stringi-search-regex]{regular expression}. If
-\code{regions_regex} is given but \code{regions_replace} is not, then only the
-part of the entries in \code{regions} matching the regex
+\item{regions_regex}{(\code{character} scalar, or \code{NULL})
+A \link[stringi:stringi-search-regex]{regular expression}. If
+\code{regions_regex} is given but \code{regions_replace} is not, then only
+the part of the entries in \code{regions} matching the regex
 are used to define samples (using \code{\link[stringr]{str_extract}}).  If
 \code{regions_replace} is also used, then the regex is instead replaced by
 \code{regions_replace} (using \code{\link[stringr]{str_replace}}).
 \code{NA_character} is treated the same way as \code{NULL}.}
 
-\item{regions_replace}{(\code{character} vector of length one, or \code{NULL})
+\item{regions_replace}{(\code{character} scalar, or \code{NULL})
 Replacement string for \code{regions_regex}.
 \code{NA_character} is treated the same way as \code{NULL}.}
 
@@ -48,62 +48,64 @@ vectors giving the regions which should be concatenated for each output
 region.}
 
 \item{use_output}{(one of \code{"first"}, \code{"second"}, or \code{"no"}) If
-one of the regions given by \code{output} is also present in \code{seqtabs},
-then the \code{seqtabs} version is used preferentially if
+one of the regions given by \code{output} is also present in
+\code{seqtabs}, then the \code{seqtabs} version is used preferentially
 \code{use_output == "first"}, as a backup value when one of the
-subregions/domains is missing if \code{use_output == "second"}, or not at
-all if \code{use_output == "no"}.}
+subregions/domains is missing if \code{use_output == "second"}, or not
+at all if \code{use_output == "no"}.}
 
-\item{order}{(\code{character} vector) The order in which the sub-regions/domains
-should be concatenated to produce the output(s).}
+\item{order}{(\code{character} vector) The order in which the
+sub-regions/domains should be concatenated to produce the output(s).}
 
-\item{read_column}{(\code{character} vector of length one) Column name from
-the \code{seqtabs} which uniquely identifies each read (but different
+\item{read_column}{(\code{character} scalar) Column name from the
+\code{seqtabs} which uniquely identifies each read (but different
 regions extracted from the same read should have the same ID.)}
 
-\item{asv_column}{(\code{character} vector of length one) Column name from
-the \code{seqtabs} which gives the denoised sequences.}
+\item{asv_column}{(\code{character} scalar) Column name from the
+\code{seqtabs} which gives the denoised sequences.}
 
 \item{rawtabs}{(\code{list} of \code{data.frame}) Data sources of the same
 format as \code{seqtabs}, with columns \code{read_column} and
-\code{seq_column}.  These should be of the same number as \code{seqtabs},
-and correspond to the sub-regions/domains specified in \code{regions}.  The
-default is to find \code{raw_column} in \code{seqtabs}.}
+\code{raw_column}.  These should be of the same number as
+\code{seqtabs}, and correspond to the sub-regions/domains specified in
+\code{regions}.  The default is to look for \code{raw_column} in
+\code{seqtabs}.}
 
-\item{raw_column}{(\code{character} vector of length one, or \code{NULL})
+\item{raw_column}{(\code{character} scalar, or \code{NULL})
 Column name from the \code{seqtabs} which gives the raw sequences.  If
-\code{NULL} or \code{NA_character_}, then consensus sequences will not be
-used as a  backup when no denoised sequence is present.}
+\code{NULL} or \code{NA_character_}, then consensus sequences will not
+be used as a  backup when no denoised sequence is present.}
 
-\item{raw_regions}{(\code{character} vector with the same length as \code{rawtabs})
-The names of the regions/domains represented by each of the tables in
-\code{rawtabs}.  These will be processed using \code{regions_regex} and
-\code{regions_replace}, if given.}
+\item{raw_regions}{(\code{character} vector with the same length as
+\code{rawtabs}) The names of the regions/domains represented by each
+of the tables in \code{rawtabs}.  These will be processed using
+\code{regions_regex} and \code{regions_replace}, if given.}
 
-\item{sample_column}{(\code{character} vector of length one, or \code{NULL})
-An optional column name from the \code{seqtabs} which identifies which
-sample each sequence is from.  If given, this is used (after possible
-modification by \code{sample_regex} and \code{sample_replace}) to identify
+\item{sample_column}{(\code{character} scalar, or \code{NULL}) An optional
+column name from the \code{seqtabs} which identifies which sample each
+sequence is from.  If given, this is used (after possible modification
+by \code{sample_regex} and \code{sample_replace}) to identify
 different samples for \code{\link[dada2]{isBimeraDenovoTable}}.
 \code{NA_character} is treated the same way as \code{NULL}.}
 
-\item{sample_regex}{(\code{character} vector of length one, or \code{NULL}) A
+\item{sample_regex}{(\code{character} scalar, or \code{NULL}) A
 \link[stringi:stringi-search-regex]{regular expression}. If
-\code{sample_regex} is given but \code{sample_replace} is not, then only the
-part of the entries in \code{sample_column} matching the regex
-are used to define samples (using \code{\link[stringr]{str_extract}}).  If
-\code{sample_replace} is also used, then the regex is instead replaced by
-\code{sample_replace} (using \code{\link[stringr]{str_replace}}).
-\code{NA_character} is treated the same way as \code{NULL}.}
+\code{sample_regex} is given but \code{sample_replace} is not, then
+only the part of the entries in \code{sample_column} matching the
+regex are used to define samples (using
+\code{\link[stringr]{str_extract}}).  If \code{sample_replace} is also
+used, then the regex is instead replaced by \code{sample_replace}
+(using \code{\link[stringr]{str_replace}}). \code{NA_character} is
+treated the same way as \code{NULL}.}
 
-\item{sample_replace}{(\code{character} vector of length one, or \code{NULL})
-Replacement string for \code{sample_regex}.
-\code{NA_character} is treated the same way as \code{NULL}.}
+\item{sample_replace}{(\code{character} scalar, or \code{NULL})
+Replacement string for \code{sample_regex}. \code{NA_character} is
+treated the same way as \code{NULL}.}
 
 \item{chimera_offset}{(\code{integer}) By default, bimeras are checked for
-sub-region/domains 1, 2, 3; 3, 4, 5; 5, 6, 7; etc. This is appropriate if
-the domains alternate variable, conserved, variable, etc.  If a more
-conserved domain is first, use \code{chimera_offset = 1}.}
+sub-region/domains 1, 2, 3; 3, 4, 5; 5, 6, 7; etc. This is appropriate
+if the domains alternate variable, conserved, variable, etc.  If a
+more conserved domain is first, use \code{chimera_offset = 1}.}
 
 \item{allow_map}{(\code{logical} scalar) If \code{TRUE} and if \code{asvs}
 contains non-missing values, attempt to map each raw read without a
@@ -114,17 +116,17 @@ corresponding ASV to the nearest ASV.}
 \code{asvs}, then attempt to make a consensus of all raw reads.}
 
 \item{allow_raw}{(\code{logical} scalar) If \code{TRUE}, then after mapping
-and/or consensus building, remaining raw reads are taken as they are. If
-\code{FALSE}, the corresponding results will be \code{NA}.}
+and/or consensus building, remaining raw reads are taken as they are.
+If \code{FALSE}, the corresponding results will be \code{NA}.}
 
 \item{...}{additional arguments passed to \code{\link[dada2]{isBimeraDenovo}}
 or \code{\link[dada2]{isBimeraDenovoTable}}.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with column "\code{seq.id}" and
-\code{sample_column} (if given), as well as one column for each value of
-\code{regions} and \code{output}, representing the sub-regions/domains and
-the concatenated full region.
+       \code{sample_column} (if given), as well as one column for each value
+       of \code{regions} and \code{output}, representing the
+       sub-regions/domains and the concatenated full region.
 }
 \description{
 The sequences from each denoised sub-region/domain are concatenated to create
