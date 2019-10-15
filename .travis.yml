@@ -15,8 +15,8 @@ r_binary_packages:
    - assertthat
    - rlang
    - tictoc
-   - Biostrings
-   - ShortRead
+   - testthat
+   - backports
 r_github_packages:
    - jimhester/lintr
    - brendanf/rITSx
