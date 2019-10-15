@@ -23,14 +23,14 @@ The sequences to calculate a consensus for.}
 \item{ncpus}{(\code{integer}) Number of CPUs to use.}
 
 \item{simplify}{(\code{logical}) If \code{TRUE}, return an object of the same
-type as \code{seq} containing a single sequence representing the consensus.
-If \code{FALSE}, an object of the same type as \code{seq} representing the
-consensus sequence for reads which were included in the consensus, or
-\code{NA_character_} for reads which were initially \code{NA} or which were
-removed from the consensus alignment as outliers.  For the
-\code{\link[Biostrings]{XStringSet}} method, which does not allow \code{NA}
-entries, these elements are missing from the set (this can be deduced by
-the names).}
+type as \code{seq} containing a single sequence representing the
+consensus. If \code{FALSE}, an object of the same type as \code{seq}
+representing the consensus sequence for reads which were included in
+the consensus, or \code{NA_character_} for reads which were initially
+\code{NA} or which were removed from the consensus alignment as
+outliers.  For the \code{\link[Biostrings]{XStringSet}} method, which
+does not allow \code{NA} entries, these elements are missing from the
+set (this can be deduced by the names).}
 
 \item{names}{(\code{character}) If \code{seq} is a \code{character} vector,
 names for the sequences.}

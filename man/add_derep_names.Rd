@@ -13,7 +13,8 @@ add_derep_names(derep, ...)
 \method{add_derep_names}{list}(derep, filenames = names(derep), ...)
 }
 \arguments{
-\item{derep}{(object of class \code{\link[dada2:derep-class]{derep}} or a \code{list} of  such objects) object(s) to add names to.}
+\item{derep}{(object of class \code{\link[dada2:derep-class]{derep}} or a
+\code{list} of  such objects) object(s) to add names to.}
 
 \item{...}{passed to methods}
 
@@ -25,8 +26,9 @@ add_derep_names(derep, ...)
 }
 \value{
 (object of class \code{derep}, or a list of such objects) a
-shallow copy of \code{derep}, with an additional member "\code{$names}",
-giving the identifiers for the sequences from the original fasta/q file.
+        shallow copy of \code{derep}, with an additional member
+        "\code{$names}", giving the identifiers for the sequences from the
+        original fasta/q file.
 }
 \description{
 Add sequence names to a derep object

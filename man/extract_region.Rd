@@ -17,15 +17,28 @@ extract_region(seq, positions, region, region2 = region,
   region2 = region, outfile = NULL, append = FALSE, ...)
 }
 \arguments{
-\item{seq}{(\code{character} (a file name) or a \code{\link[ShortRead:ShortRead-class]{ShortRead}} object) the sequences to extract regions from.}
+\item{seq}{(\code{character} (a file name) or a
+\code{\link[ShortRead:ShortRead-class]{ShortRead}} object) the
+sequences to extract regions from.}
 
-\item{positions}{(\code{data.frame}) as returned by \code{\link[rITSx]{itsx}} with \code{positions = TRUE} and \code{read_function} set; should have columns \code{$seq} with sequence IDs (matching those in \code{seq}), \code{$region} giving the name of each region, and \code{$start} and \code{$end} giving the start and stop location, if found, of each region.}
+\item{positions}{(\code{data.frame}) as returned by \code{\link[rITSx]{itsx}}
+with \code{positions = TRUE} and \code{read_function} set; should have
+columns \code{$seq} with sequence IDs (matching those in \code{seq}),
+\code{$region} giving the name of each region, and \code{$start} and
+\code{$end} giving the start and stop location, if found, of each
+region.}
 
-\item{region}{(\code{character}) The region to extract. Should match a value given in \code{positions$region}.}
+\item{region}{(\code{character}) The region to extract. Should match a value
+given in \code{positions$region}.}
 
-\item{region2}{(\code{character}) If different from \code{region}, then the entire segment beginning at the start of \code{region} and ending at the end of \code{region2} will be extracted.  For instance, to extract the entire ITS region, use \code{region = 'ITS1', region2 = 'ITS2'}.}
+\item{region2}{(\code{character}) If different from \code{region}, then the
+entire segment beginning at the start of \code{region} and ending at
+the end of \code{region2} will be extracted.  For instance, to extract
+the entire ITS region, use \code{region = 'ITS1', region2 = 'ITS2'}.}
 
-\item{outfile}{(\code{character}) If given, the output will be written to the filename given in fasta or fastq format.  The format is determined by \code{seq}, not by the extension of \code{outfile}.}
+\item{outfile}{(\code{character}) If given, the output will be written to the
+filename given in fasta or fastq format.  The format is determined by
+\code{seq}, not by the extension of \code{outfile}.}
 
 \item{...}{Passed to methods.}
 
@@ -36,7 +49,9 @@ extract_region(seq, positions, region, region2 = region,
 overwritten.}
 }
 \value{
-(\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region from each of the input sequences where it was found.
+(\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or
+        \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region
+        from each of the input sequences where it was found.
 }
 \description{
 Extract regions from a set of sequences (maybe with qualities)

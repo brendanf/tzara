@@ -5,11 +5,14 @@
 \title{Reconstruct a longer region out of ASVs or consensus sequence of individual
 domains.}
 \usage{
-reconstruct(seqtabs, regions = names(seqtabs), output = "concat",
-  order = setdiff(regions, output), read_column = "seq.id",
-  asv_column = "dada.seq", rawtabs = seqtabs, raw_column = NULL,
+reconstruct(seqtabs, regions = names(seqtabs), regions_regex = NULL,
+  regions_replace = NULL, output = "concat", use_output = c("first",
+  "second", "no"), order = setdiff(regions, output),
+  read_column = "seq.id", asv_column = "dada.seq", rawtabs = seqtabs,
+  raw_column = NULL, raw_regions = names(rawtabs),
   sample_column = NULL, sample_regex = NULL, sample_replace = NULL,
-  chimera_offset = 0, ...)
+  chimera_offset = 0, allow_map = TRUE, allow_consensus = TRUE,
+  allow_raw = FALSE, ...)
 }
 \arguments{
 \item{seqtabs}{(\code{list} of \code{data.frame}) with columns
@@ -23,13 +26,36 @@ The names of the regions/domains represented by each of the tables in
 \code{seqtabs}.  If not supplied, then \code{seqtabs} should be named by the
 regions.}
 
-\item{output}{(\code{character} vector of lenth one) The name of the output
-region.  If this region is also given in \code{seqtabs}, then the value from
-\code{seqtabs} will be used as a backup if one or more of the
-sub-regions/domains is missing.}
+\item{regions_regex}{(\code{character} vector of length one, or \code{NULL}) A
+\link[stringi:stringi-search-regex]{regular expression}. If
+\code{regions_regex} is given but \code{regions_replace} is not, then only the
+part of the entries in \code{regions} matching the regex
+are used to define samples (using \code{\link[stringr]{str_extract}}).  If
+\code{regions_replace} is also used, then the regex is instead replaced by
+\code{regions_replace} (using \code{\link[stringr]{str_replace}}).
+\code{NA_character} is treated the same way as \code{NULL}.}
+
+\item{regions_replace}{(\code{character} vector of length one, or \code{NULL})
+Replacement string for \code{regions_regex}.
+\code{NA_character} is treated the same way as \code{NULL}.}
+
+\item{output}{(\code{character} scalar or named list of \code{character}
+vectors) If a \code{character} scalar, then the name to be used for the
+(single) output region.  In this case the region will be the concatenation
+of all the regions in \code{order}.  Alternatively, a list where the names
+are the names of the output regions, and the values are \code{character}
+vectors giving the regions which should be concatenated for each output
+region.}
+
+\item{use_output}{(one of \code{"first"}, \code{"second"}, or \code{"no"}) If
+one of the regions given by \code{output} is also present in \code{seqtabs},
+then the \code{seqtabs} version is used preferentially if
+\code{use_output == "first"}, as a backup value when one of the
+subregions/domains is missing if \code{use_output == "second"}, or not at
+all if \code{use_output == "no"}.}
 
 \item{order}{(\code{character} vector) The order in which the sub-regions/domains
-should be concatenated to produce the output.}
+should be concatenated to produce the output(s).}
 
 \item{read_column}{(\code{character} vector of length one) Column name from
 the \code{seqtabs} which uniquely identifies each read (but different
@@ -48,6 +74,11 @@ default is to find \code{raw_column} in \code{seqtabs}.}
 Column name from the \code{seqtabs} which gives the raw sequences.  If
 \code{NULL} or \code{NA_character_}, then consensus sequences will not be
 used as a  backup when no denoised sequence is present.}
+
+\item{raw_regions}{(\code{character} vector with the same length as \code{rawtabs})
+The names of the regions/domains represented by each of the tables in
+\code{rawtabs}.  These will be processed using \code{regions_regex} and
+\code{regions_replace}, if given.}
 
 \item{sample_column}{(\code{character} vector of length one, or \code{NULL})
 An optional column name from the \code{seqtabs} which identifies which
@@ -73,6 +104,18 @@ Replacement string for \code{sample_regex}.
 sub-region/domains 1, 2, 3; 3, 4, 5; 5, 6, 7; etc. This is appropriate if
 the domains alternate variable, conserved, variable, etc.  If a more
 conserved domain is first, use \code{chimera_offset = 1}.}
+
+\item{allow_map}{(\code{logical} scalar) If \code{TRUE} and if \code{asvs}
+contains non-missing values, attempt to map each raw read without a
+corresponding ASV to the nearest ASV.}
+
+\item{allow_consensus}{(\code{logical} scalar) If \code{TRUE} and if
+\code{allow_map} is \code{FALSE} or there are no non-missing values in
+\code{asvs}, then attempt to make a consensus of all raw reads.}
+
+\item{allow_raw}{(\code{logical} scalar) If \code{TRUE}, then after mapping
+and/or consensus building, remaining raw reads are taken as they are. If
+\code{FALSE}, the corresponding results will be \code{NA}.}
 
 \item{...}{additional arguments passed to \code{\link[dada2]{isBimeraDenovo}}
 or \code{\link[dada2]{isBimeraDenovoTable}}.}

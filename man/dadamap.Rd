@@ -9,14 +9,18 @@ dadamap(derep, dada, ...)
 \arguments{
 \item{derep}{a \code{\link[dada2]{derep-class}} object or list of such objects}
 
-\item{dada}{(\link[dada2]{dada-class} object or list of such objects) the results of a call to \code{\link[dada2]{dada}} on \code{derep}}
+\item{dada}{(\link[dada2]{dada-class} object or list of such objects) the
+results of a call to \code{\link[dada2]{dada}} on \code{derep}}
 
-\item{...}{additional columns to add to the output.  Names included in the output by default should be avoided.}
+\item{...}{additional columns to add to the output.  Names included in the
+output by default should be avoided.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns:
   \describe{
-    \item{\code{$name} (\code{character})}{names from \code{derep}, if it is a named list of \code{\link[=add_derep_names]{named_derep}} objects. Otherwise absent unless provided in \code{...}.}
+    \item{\code{$name} (\code{character})}{names from \code{derep}, if it is
+    a named list of \code{\link[=add_derep_names]{named_derep}} objects.
+    Otherwise absent unless provided in \code{...}.}
     \item{\code{...} (\code{character})}{any additional arguments, passed on
       to \code{\link[tibble]{tibble}}}
     \item{\code{$seq.id} (\code{character})}{the sequence identifiers from the
@@ -31,6 +35,10 @@ a \code{\link[tibble]{tibble}} with columns:
 Produce a map between denoised sequences and their original identifiers.
 }
 \details{
-Columns \code{$derep.seq} and \code{$dada.seq} contain one sequence per read
-as plain character strings. Keeping a separate, dereplicated list of sequences and storing references to them may seem like it would be more memory efficient, but it is not necessary to do this explicitly, because this is what R already does with \code{character} vectors; only one copy of each unique string is actually kept in memory, and everything else is pointers.
+Columns \code{$derep.seq} and \code{$dada.seq} contain one sequence
+per read as plain character strings. Keeping a separate, dereplicated list of
+sequences and storing references to them may seem like it would be more
+memory efficient, but it is not necessary to do this explicitly, because this
+is what R already does with \code{character} vectors; only one copy of each
+unique string is actually kept in memory, and everything else is pointers.
 }

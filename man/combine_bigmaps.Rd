@@ -4,17 +4,17 @@
 \alias{combine_bigmaps}
 \title{Combine raw and denoised reads from multiple regions of the same sequences.}
 \usage{
-combine_bigmaps(dadamap, rawdata, key = "Region")
+combine_bigmaps(dadamap, rawdata)
 }
 \arguments{
 \item{dadamap}{(\code{\link{dadamap}} object)}
 
-\item{rawdata}{(\code{\link[tibble]{tibble}}) as returned by \code{\link{summarize_sread}}}
-
-\item{key}{(\code{character}) no longer used??}
+\item{rawdata}{(\code{\link[tibble]{tibble}}) as returned by
+\code{\link{summarize_sread}}}
 }
 \value{
-a \code{\link[tibble]{tibble}} giving the sequences for each region (contents of the column given by \code{key}) for each read (uniquely identified by all other columns)
+a \code{\link[tibble]{tibble}} giving the sequences for each region
+        for each read (uniquely identified by all other columns)
 }
 \description{
 Combine raw and denoised reads from multiple regions of the same sequences.

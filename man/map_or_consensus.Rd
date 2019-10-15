@@ -4,7 +4,8 @@
 \alias{map_or_consensus}
 \title{Assign consensus sequences to unmapped reads}
 \usage{
-map_or_consensus(asvs, raw, maxdist = 10, ...)
+map_or_consensus(asvs, raw, maxdist = 10, allow_map = TRUE,
+  allow_consensus = TRUE, allow_raw = FALSE, ...)
 }
 \arguments{
 \item{asvs}{(\code{character} vector) ASV sequences mapped to a set of reads.
@@ -16,6 +17,18 @@ reads as \code{asvs}.  May be \code{\link{NA_character_}}}
 
 \item{maxdist}{(\code{numeric} scalar) Maximum Levenshtein distance between
 a raw read and an ASV for the read to be mapped to the ASV.}
+
+\item{allow_map}{(\code{logical} scalar) If \code{TRUE} and if \code{asvs}
+contains non-missing values, attempt to map each raw read without a
+corresponding ASV to the nearest ASV.}
+
+\item{allow_consensus}{(\code{logical} scalar) If \code{TRUE} and if
+\code{allow_map} is \code{FALSE} or there are no non-missing values in
+\code{asvs}, then attempt to make a consensus of all raw reads.}
+
+\item{allow_raw}{(\code{logical} scalar) If \code{TRUE}, then after mapping
+and/or consensus building, remaining raw reads are taken as they are. If
+\code{FALSE}, the corresponding results will be \code{NA}.}
 
 \item{...}{passed to \code{\link{cluster_consensus.character}}}
 }
