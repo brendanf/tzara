@@ -1258,7 +1258,8 @@ consensus_missing_regions <- function(
             ...,
             keep = TRUE
          ) %>%
-            dplyr::bind_rows()
+            dplyr::bind_rows() %>%
+            dplyr::group_by_at(reg)
          regstats <- dplyr::summarise_at(
             out_table,
             setdiff(order, reg),
