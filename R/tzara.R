@@ -1137,7 +1137,7 @@ find_all_region_chimeras <- function(
 #' @param ... passed on to \code{\link[dada2]{isBimeraDenovoTable}} or
 #'        \code{\link[dada2]{isBimeraDenovo}}.
 #'
-#' @return an \code{integer} vector giving the row numbers of
+#' @return an \code{character} vector giving the read IDs of
 #'        \code{region_table} which were detected as bimeras.
 find_region_chimeras <- function(region_table, chimset, sample_column, ...) {
    seqs <- do.call(str_c, region_table[, chimset])
@@ -1167,7 +1167,7 @@ find_region_chimeras <- function(region_table, chimset, sample_column, ...) {
               sum(seqs %in% names(chims)[chims], na.rm = TRUE),
               sum(!is.na(seqs)),
               chimset_name)
-   which(seqs %in% names(chims)[chims])
+   names(chims)[chims]
 }
 
 block_consensus <- function(.x, .y, reg, reg2, reg2_raw, read_column, ...) {
