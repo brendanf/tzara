@@ -22,7 +22,7 @@ which identifies different samples; if present, use
 \code{\link[dada2]{isBimeraDenovo}}.}
 }
 \value{
-an \code{integer} vector giving the row numbers of
+an \code{character} vector giving the read IDs of
        \code{region_table} which were detected as bimeras.
 }
 \description{
