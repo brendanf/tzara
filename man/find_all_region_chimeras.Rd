@@ -5,7 +5,7 @@
 \title{Find chimeras in adjacent variable-conserved-variable domain triplets}
 \usage{
 find_all_region_chimeras(region_table, order, sample_column = NULL,
-  chimera_offset = 0, ...)
+  read_column = "read_id", chimera_offset = 0, ...)
 }
 \arguments{
 \item{region_table}{(\code{data.frame} containing all the regions in
@@ -17,6 +17,9 @@ find_all_region_chimeras(region_table, order, sample_column = NULL,
 which identifies different samples; if present, use
 \code{\link[dada2]{isBimeraDenovoTable}} instead of
 \code{\link[dada2]{isBimeraDenovo}}.}
+
+\item{read_column}{(\code{character} scalar) column in region_table
+which identifies different reads.}
 
 \item{chimera_offset}{(\code{integer} scalar) use \code{1} if the first
 region is conserved.}

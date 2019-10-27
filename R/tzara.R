@@ -906,6 +906,7 @@ reconstruct <- function(
       region_table = region_table,
       order = order,
       sample_column = sample_column,
+      read_column = read_column,
       chimera_offset = chimera_offset)
 
    if (!is.null(raw_column)) {
@@ -1090,6 +1091,8 @@ assemble_region_table <- function(
 #'        which identifies different samples; if present, use
 #'        \code{\link[dada2]{isBimeraDenovoTable}} instead of
 #'        \code{\link[dada2]{isBimeraDenovo}}.
+#' @param read_column (\code{character} scalar) column in region_table
+#'        which identifies different reads.
 #' @param chimera_offset (\code{integer} scalar) use \code{1} if the first
 #'        region is conserved.
 #' @param ... passed to \code{find_region_chimeras}.
@@ -1105,6 +1108,7 @@ find_all_region_chimeras <- function(
    region_table,
    order,
    sample_column = NULL,
+   read_column = "read_id",
    chimera_offset = 0,
    ...
 ) {
@@ -1117,6 +1121,7 @@ find_all_region_chimeras <- function(
          find_region_chimeras,
          region_table = region_table,
          sample_column = sample_column,
+         read_column = read_column,
          ...
       )
    )
@@ -1134,12 +1139,15 @@ find_all_region_chimeras <- function(
 #'        which identifies different samples; if present, use
 #'        \code{\link[dada2]{isBimeraDenovoTable}} instead of
 #'        \code{\link[dada2]{isBimeraDenovo}}.
+#' @param read_column (\code{character} scalar) column in region_table
+#'        which identifies different reads.
 #' @param ... passed on to \code{\link[dada2]{isBimeraDenovoTable}} or
 #'        \code{\link[dada2]{isBimeraDenovo}}.
 #'
 #' @return an \code{character} vector giving the read IDs of
 #'        \code{region_table} which were detected as bimeras.
-find_region_chimeras <- function(region_table, chimset, sample_column, ...) {
+find_region_chimeras <- function(region_table, chimset, sample_column,
+                                 read_column, ...) {
    seqs <- do.call(str_c, region_table[, chimset])
    chimset_name <- paste(chimset, collapse = "--")
    flog.trace("Searching for bimeras in regions %s.", chimset_name)
@@ -1167,7 +1175,7 @@ find_region_chimeras <- function(region_table, chimset, sample_column, ...) {
               sum(seqs %in% names(chims)[chims], na.rm = TRUE),
               sum(!is.na(seqs)),
               chimset_name)
-   names(chims)[chims]
+   region_table[[read_column]][seqs %in% names(chims)[chims]]
 }
 
 block_consensus <- function(.x, .y, reg, reg2, reg2_raw, read_column, ...) {

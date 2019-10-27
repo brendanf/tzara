@@ -4,7 +4,8 @@
 \alias{find_region_chimeras}
 \title{Check for bimeras in a subset of regions}
 \usage{
-find_region_chimeras(region_table, chimset, sample_column, ...)
+find_region_chimeras(region_table, chimset, sample_column, read_column,
+  ...)
 }
 \arguments{
 \item{region_table}{(\code{data.frame} containing all the regions in
@@ -17,6 +18,9 @@ concatenate and then check for bimeras.}
 which identifies different samples; if present, use
 \code{\link[dada2]{isBimeraDenovoTable}} instead of
 \code{\link[dada2]{isBimeraDenovo}}.}
+
+\item{read_column}{(\code{character} scalar) column in region_table
+which identifies different reads.}
 
 \item{...}{passed on to \code{\link[dada2]{isBimeraDenovoTable}} or
 \code{\link[dada2]{isBimeraDenovo}}.}
