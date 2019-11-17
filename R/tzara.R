@@ -1007,11 +1007,11 @@ combine_bigmaps <- function(dadamap, rawdata) {
    joincols <- intersect(colnames(dadamap), colnames(rawdata))
    dplyr::full_join(dadamap, rawdata, by = joincols) %>%
       dplyr::group_by("seq.id") %>%
-      dplyr::filter(any(!is.na(.data$asv.idx))) %>%
+      dplyr::filter(any(!is.na(.data$dada.idx))) %>%
       dplyr::mutate(
-         seq = dplyr::coalesce(.data$asv.seq, .data$derep.seq, .data$seq)
+         seq = dplyr::coalesce(.data$dada.seq, .data$derep.seq, .data$seq)
       ) %>%
-      dplyr::select(-"derep.seq", -"derep.idx", -"asv.seq", -"asv.idx")
+      dplyr::select(-"derep.seq", -"derep.idx", -"dada.seq", -"dada.idx")
 }
 
 is_string_or_missing <- function(x) {
