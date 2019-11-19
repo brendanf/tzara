@@ -8,11 +8,9 @@
 \usage{
 seqhash(seq, algo = "xxhash32", len = NA, preserve_na = TRUE)
 
-\method{seqhash}{character}(seq, algo = "xxhash32", len = NA,
-  preserve_na = TRUE)
+\method{seqhash}{character}(seq, algo = "xxhash32", len = NA, preserve_na = TRUE)
 
-\method{seqhash}{XStringSet}(seq, algo = "xxhash32", len = NA,
-  preserve_na = TRUE)
+\method{seqhash}{XStringSet}(seq, algo = "xxhash32", len = NA, preserve_na = TRUE)
 }
 \arguments{
 \item{seq}{(\code{character} or \code{\link[Biostrings]{XStringSet}}) the

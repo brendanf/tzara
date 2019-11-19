@@ -4,8 +4,7 @@
 \alias{find_region_chimeras}
 \title{Check for bimeras in a subset of regions}
 \usage{
-find_region_chimeras(region_table, chimset, sample_column, read_column,
-  ...)
+find_region_chimeras(region_table, chimset, sample_column, read_column, ...)
 }
 \arguments{
 \item{region_table}{(\code{data.frame} containing all the regions in

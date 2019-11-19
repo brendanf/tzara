@@ -4,17 +4,33 @@
 \alias{extract_region}
 \alias{extract_region.character}
 \alias{extract_region.ShortRead}
+\alias{extract_region.list}
 \title{Extract regions from a set of sequences (maybe with qualities)}
 \usage{
-extract_region(seq, positions, region, region2 = region,
-  outfile = NULL, ...)
+extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
 
-\method{extract_region}{character}(seq, positions, region,
-  region2 = region, outfile = NULL, qualityType = "FastqQuality",
-  append = FALSE, ...)
+\method{extract_region}{character}(
+  seq,
+  positions,
+  region,
+  region2 = region,
+  outfile = NULL,
+  qualityType = "FastqQuality",
+  append = FALSE,
+  ...
+)
 
-\method{extract_region}{ShortRead}(seq, positions, region,
-  region2 = region, outfile = NULL, append = FALSE, ...)
+\method{extract_region}{ShortRead}(
+  seq,
+  positions,
+  region,
+  region2 = region,
+  outfile = NULL,
+  append = FALSE,
+  ...
+)
+
+\method{extract_region}{list}(seq, positions, region, region2 = region, outfile = NULL, ...)
 }
 \arguments{
 \item{seq}{(\code{character} (a file name) or a

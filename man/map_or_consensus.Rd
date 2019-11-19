@@ -4,8 +4,15 @@
 \alias{map_or_consensus}
 \title{Assign consensus sequences to unmapped reads}
 \usage{
-map_or_consensus(asvs, raw, maxdist = 10, allow_map = TRUE,
-  allow_consensus = TRUE, allow_raw = FALSE, ...)
+map_or_consensus(
+  asvs,
+  raw,
+  maxdist = 10,
+  allow_map = TRUE,
+  allow_consensus = TRUE,
+  allow_raw = FALSE,
+  ...
+)
 }
 \arguments{
 \item{asvs}{(\code{character} vector) ASV sequences mapped to a set of reads.

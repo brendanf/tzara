@@ -8,11 +8,16 @@
 \usage{
 cluster_consensus(seq, ..., ncpus = 1, simplify = TRUE)
 
-\method{cluster_consensus}{character}(seq, names = names(seq),
-  dna2rna = TRUE, ..., ncpus = 1, simplify = TRUE)
+\method{cluster_consensus}{character}(
+  seq,
+  names = names(seq),
+  dna2rna = TRUE,
+  ...,
+  ncpus = 1,
+  simplify = TRUE
+)
 
-\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1,
-  simplify = TRUE)
+\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1, simplify = TRUE)
 }
 \arguments{
 \item{seq}{(\code{character} vector or \code{\link[Biostrings]{XStringSet}})

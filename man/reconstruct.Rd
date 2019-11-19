@@ -5,14 +5,28 @@
 \title{Reconstruct a longer region out of ASVs or consensus sequence of individual
 domains.}
 \usage{
-reconstruct(seqtabs, regions = names(seqtabs), regions_regex = NULL,
-  regions_replace = NULL, output = "concat", use_output = c("first",
-  "second", "no"), order = setdiff(regions, output),
-  read_column = "seq.id", asv_column = "dada.seq", rawtabs = seqtabs,
-  raw_column = NULL, raw_regions = names(rawtabs),
-  sample_column = NULL, sample_regex = NULL, sample_replace = NULL,
-  chimera_offset = 0, allow_map = TRUE, allow_consensus = TRUE,
-  allow_raw = FALSE, ...)
+reconstruct(
+  seqtabs,
+  regions = names(seqtabs),
+  regions_regex = NULL,
+  regions_replace = NULL,
+  output = "concat",
+  use_output = c("first", "second", "no"),
+  order = setdiff(regions, output),
+  read_column = "seq.id",
+  asv_column = "dada.seq",
+  rawtabs = seqtabs,
+  raw_column = NULL,
+  raw_regions = names(rawtabs),
+  sample_column = NULL,
+  sample_regex = NULL,
+  sample_replace = NULL,
+  chimera_offset = 0,
+  allow_map = TRUE,
+  allow_consensus = TRUE,
+  allow_raw = FALSE,
+  ...
+)
 }
 \arguments{
 \item{seqtabs}{(\code{list} of \code{data.frame}) with columns

@@ -4,8 +4,14 @@
 \alias{find_all_region_chimeras}
 \title{Find chimeras in adjacent variable-conserved-variable domain triplets}
 \usage{
-find_all_region_chimeras(region_table, order, sample_column = NULL,
-  read_column = "read_id", chimera_offset = 0, ...)
+find_all_region_chimeras(
+  region_table,
+  order,
+  sample_column = NULL,
+  read_column = "read_id",
+  chimera_offset = 0,
+  ...
+)
 }
 \arguments{
 \item{region_table}{(\code{data.frame} containing all the regions in

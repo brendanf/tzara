@@ -96,11 +96,13 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    # preserve the sequence names as "seq.id" if they are present
    oldmap <- dereps
    oldmap[["oldmap"]] <- lapply(oldmap[["derep"]], `[[`, "map")
+   nestedcols <- "oldmap"
    if (all(vapply(oldmap[["derep"]], assertthat::has_name, TRUE, "names"))) {
       oldmap[["seq.id"]] <- lapply(oldmap[["derep"]], `[[`, "names")
+      nestedcols <- c(nestedcols, "seq.id")
    }
    oldmap <- dplyr::select(oldmap, -"derep") %>%
-      tidyr::unnest() %>%
+      tidyr::unnest(cols = nestedcols) %>%
       dplyr::group_by_at(gps) %>%
       dplyr::mutate(idx = 1:dplyr::n()) %>%
       dplyr::ungroup()
@@ -110,7 +112,7 @@ combine_derep <- function(dereps, .data = NULL, ...) {
       dplyr::mutate_at("derep",
                        ~purrr::map(., .f = ~tibble(seq = names(.$uniques),
                                                            n = .$uniques))) %>%
-      tidyr::unnest()
+      tidyr::unnest(cols = "derep")
 
    # combine duplicate sequences among all files.
    newuniques <- olduniques %>%
@@ -129,7 +131,7 @@ combine_derep <- function(dereps, .data = NULL, ...) {
          dplyr::mutate(oldmap = seq_along(seq)) %>%
          dplyr::ungroup(),
       newuniques,
-      .by = "seq")
+      by = "seq")
    }
 
    out <- list()
@@ -701,6 +703,8 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
    return(out)
 }
 
+#' @rdname extract_region
+#' @export
 extract_region.list <- function(seq, positions, region, region2 = region,
                                      outfile = NULL, ...) {
 
