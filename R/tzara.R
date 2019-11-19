@@ -658,8 +658,8 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
          } else {
             ShortRead::writeFasta(seq, outfile, mode = "a")
          }
-         return(seq)
       }
+      return(seq)
    }
 
    p <- positions %>%
