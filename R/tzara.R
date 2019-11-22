@@ -199,7 +199,8 @@ dadamap.derep <- function(derep, dada, ...) {
          dada.idx = dada$map,
          derep.idx = seq_along(.data$dada.idx),
          dada.seq = dada$sequence[.data$dada.idx]
-      )
+      ),
+      by = "derep.idx"
    )
    class(m) <- c("dadamap", class(m))
    m
