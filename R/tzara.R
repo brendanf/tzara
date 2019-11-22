@@ -209,9 +209,12 @@ dadamap.derep <- function(derep, dada, ...) {
 #' @export
 dadamap.list <- function(derep, dada, ...) {
    assert_that(assertthat::are_equal(length(derep), length(dada)))
+   assert_that(all(
+      purrr::map_lgl(derep, is.null) == purrr::map_lgl(dada, is.null)
+   ))
    for (i in seq_along(derep)) {
-      assert_that(methods::is(derep[[i]], "derep"))
-      assert_that(methods::is(dada[[i]], "dada"))
+      assert_that(methods::is(derep[[i]], "derep") || is.null(derep[[i]]))
+      assert_that(methods::is(dada[[i]], "dada") || is.null(dada[[i]]))
    }
 
    args <- list(..., derep = derep, dada = dada)
@@ -220,6 +223,8 @@ dadamap.list <- function(derep, dada, ...) {
       args <- args[tidyselect::vars_select(names(args), "name",
                                            tidyselect::everything())]
    }
+   args <- do.call(tibble::tibble, args) %>%
+      dplyr::filter(!purrr::map_lgl(derep, is.null))
 
    out <- purrr::pmap_dfr(args, dadamap.derep)
    class(out) <- c("dadamap", class(out))
