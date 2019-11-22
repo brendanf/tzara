@@ -407,6 +407,11 @@ has_alphabet <- function(seq, alphabet) {
 #'
 #' @param seq (\code{character} vector or \code{\link[Biostrings]{XStringSet}})
 #'        The sequences to calculate a consensus for.
+#' @param nread (\code{integer} vector) For the purposes of calculating the
+#'        consensus, consider each read to occur \code{nread} times.  Supplying
+#'        unique values for \code{seq} along with the corresponding \code{nread}
+#'        is much faster than supplying duplicate reads to
+#'        \code{cluster_consensus}.
 #' @param names (\code{character}) If \code{seq} is a \code{character} vector,
 #'        names for the sequences.
 #' @param ncpus (\code{integer}) Number of CPUs to use.
@@ -440,17 +445,18 @@ has_alphabet <- function(seq, alphabet) {
 #'
 #' @export
 
-cluster_consensus <- function(seq, ..., ncpus = 1, simplify = TRUE) {
+cluster_consensus <- function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
    UseMethod("cluster_consensus")
 }
 #' @param dna2rna (logical) whether to convert \code{seq} from DNA to RNA, and
 #'        use (calculated) RNA secondary structure in alignments.
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.character <- function(seq, names = names(seq), dna2rna = TRUE,
+cluster_consensus.character <- function(seq, nread = 1, names = names(seq), dna2rna = TRUE,
                                         ..., ncpus = 1, simplify = TRUE) {
    seq <- rlang::set_names(seq, names)
    xss <- seq[!is.na(seq)]
+   nread <- nread[!is.na(seq)]
    if (has_alphabet(xss, Biostrings::DNA_ALPHABET)) {
       xss <- Biostrings::DNAStringSet(xss)
       if (dna2rna) {
@@ -460,8 +466,11 @@ cluster_consensus.character <- function(seq, names = names(seq), dna2rna = TRUE,
       xss <- Biostrings::RNAStringSet(xss)
    }
    result <-
-      cluster_consensus.XStringSet(xss, ncpus = ncpus, simplify = simplify)
-   if (simplify) return(as.character(result))
+      cluster_consensus.XStringSet(xss, nread = nread, ncpus = ncpus, simplify = simplify)
+   if (simplify) {
+      if (length(result) == 1) return(as.character(result))
+      return(NA_character_)
+   }
    seq[] <- NA_character_
    seq[names(result)] <- as.character(result)
    seq
@@ -469,9 +478,11 @@ cluster_consensus.character <- function(seq, names = names(seq), dna2rna = TRUE,
 
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1, simplify = TRUE) {
+cluster_consensus.XStringSet <- function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
 
-   if (length(seq) < 3) return(seq[FALSE])
+   assertthat::assert_that(length(nread) == 1 | length(nread) == length(seq))
+   if (sum(nread) < 3) return(seq[FALSE])
+   if (length(seq) == 1) return(seq)
 
    if (methods::is(seq, "RNAStringSet")) {
       mult_align_class <- Biostrings::RNAMultipleAlignment
@@ -497,15 +508,16 @@ cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1, simplify = TRUE) {
 
    flog.debug("Removing outliers...")
    tictoc::tic("cluster_consensus:outliers")
-   outliers <- odseq::odseq(mult_align_class(aln))
+   aln2 <- rep(aln, nread)
+   outliers <- odseq::odseq(mult_align_class(aln2))
    flog.trace("Removed %d/%d sequences as outliers.",
                              sum(outliers), length(outliers))
-   aln <- aln[!outliers]
+   aln2 <- aln2[!outliers]
    flog_toc("TRACE")
 
    flog.trace("Masking gaps...")
    tictoc::tic("cluster_consensus:masking")
-   aln <- aln %>%
+   aln2 <- aln2 %>%
       mult_align_class() %>%
       Biostrings::maskGaps(min.fraction = 0.5, min.block.width = 1) %>%
       methods::as(seqset_class)
@@ -515,7 +527,7 @@ cluster_consensus.XStringSet <- function(seq, ..., ncpus = 1, simplify = TRUE) {
    tictoc::tic("cluster_consensus:consensus")
    on.exit(flog_toc("TRACE"), add = TRUE, after = FALSE)
    result <- DECIPHER::ConsensusSequence(
-      aln,
+      aln2,
       threshold = 0.5,
       ambiguity = TRUE,
       ignoreNonBases = TRUE,

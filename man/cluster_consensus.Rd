@@ -6,10 +6,11 @@
 \alias{cluster_consensus.XStringSet}
 \title{Calculate consensus of a cluster of sequences.}
 \usage{
-cluster_consensus(seq, ..., ncpus = 1, simplify = TRUE)
+cluster_consensus(seq, nread = 1, ..., ncpus = 1, simplify = TRUE)
 
 \method{cluster_consensus}{character}(
   seq,
+  nread = 1,
   names = names(seq),
   dna2rna = TRUE,
   ...,
@@ -17,11 +18,17 @@ cluster_consensus(seq, ..., ncpus = 1, simplify = TRUE)
   simplify = TRUE
 )
 
-\method{cluster_consensus}{XStringSet}(seq, ..., ncpus = 1, simplify = TRUE)
+\method{cluster_consensus}{XStringSet}(seq, nread = 1, ..., ncpus = 1, simplify = TRUE)
 }
 \arguments{
 \item{seq}{(\code{character} vector or \code{\link[Biostrings]{XStringSet}})
 The sequences to calculate a consensus for.}
+
+\item{nread}{(\code{integer} vector) For the purposes of calculating the
+consensus, consider each read to occur \code{nread} times.  Supplying
+unique values for \code{seq} along with the corresponding \code{nread}
+is much faster than supplying duplicate reads to
+\code{cluster_consensus}.}
 
 \item{...}{passed to methods}
 
