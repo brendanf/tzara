@@ -513,15 +513,16 @@ cluster_consensus.XStringSet <- function(seq, nread = 1, ..., ncpus = 1, simplif
 
    flog.debug("Removing outliers...")
    tictoc::tic("cluster_consensus:outliers")
-   aln2 <- rep(aln, nread)
-   outliers <- odseq::odseq(mult_align_class(aln2))
+   outliers <- odseq(mult_align_class(aln), weights = nread)
    flog.trace("Removed %d/%d sequences as outliers.",
                              sum(outliers), length(outliers))
-   aln2 <- aln2[!outliers]
+   aln <- aln[!outliers]
+   nread <- nread[!outliers]
    flog_toc("TRACE")
 
    flog.trace("Masking gaps...")
    tictoc::tic("cluster_consensus:masking")
+   aln2 <- rep(aln, nread)
    aln2 <- aln2 %>%
       mult_align_class() %>%
       Biostrings::maskGaps(min.fraction = 0.5, min.block.width = 1) %>%
