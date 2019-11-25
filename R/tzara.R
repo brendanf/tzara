@@ -457,8 +457,9 @@ cluster_consensus <- function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
 #'        use (calculated) RNA secondary structure in alignments.
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.character <- function(seq, nread = 1, names = names(seq), dna2rna = TRUE,
-                                        ..., ncpus = 1, simplify = TRUE) {
+cluster_consensus.character <-
+   function(seq, nread = 1, names = names(seq), dna2rna = TRUE, ..., ncpus = 1,
+            simplify = TRUE) {
    seq <- rlang::set_names(seq, names)
    xss <- seq[!is.na(seq)]
    nread <- nread[!is.na(seq)]
@@ -471,7 +472,12 @@ cluster_consensus.character <- function(seq, nread = 1, names = names(seq), dna2
       xss <- Biostrings::RNAStringSet(xss)
    }
    result <-
-      cluster_consensus.XStringSet(xss, nread = nread, ncpus = ncpus, simplify = simplify)
+      cluster_consensus.XStringSet(
+         xss,
+         nread = nread,
+         ncpus = ncpus,
+         simplify = simplify
+      )
    if (simplify) {
       if (length(result) == 1) return(as.character(result))
       return(NA_character_)
@@ -483,7 +489,8 @@ cluster_consensus.character <- function(seq, nread = 1, names = names(seq), dna2
 
 #' @rdname cluster_consensus
 #' @export
-cluster_consensus.XStringSet <- function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
+cluster_consensus.XStringSet <-
+   function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
 
    assertthat::assert_that(length(nread) == 1 | length(nread) == length(seq))
    if (sum(nread) < 3) return(seq[FALSE])
