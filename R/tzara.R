@@ -644,6 +644,33 @@ extract_region.character <- function(seq, positions, region, region2 = region,
 
 #' @rdname extract_region
 #' @export
+extract_region.DNAStringSet <- function(seq, positions, region,
+                                        region2 = region, outfile = NULL,
+                                        append = FALSE, ...) {
+   seq <- ShortRead::ShortRead(
+      sread = seq,
+      id = Biostrings::BStringSet(names(seq))
+   )
+   extract_region.ShortRead(seq, positions, region, region2, outfile, append,
+                            ...)
+}
+
+#' @rdname extract_region
+#' @export
+extract_region.QualityScaledDNAStringSet <- function(seq, positions, region,
+                                        region2 = region, outfile = NULL,
+                                        append = FALSE, ...) {
+   seq <- ShortRead::ShortReadQ(
+      sread = Biostrings::DNAStringSet(as.character(seq)),
+      quality = Biostrings::quality(seq),
+      id = Biostrings::BStringSet(names(seq))
+   )
+   extract_region.ShortRead(seq, positions, region, region2, outfile, append,
+                            ...)
+}
+
+#' @rdname extract_region
+#' @export
 extract_region.ShortRead <- function(seq, positions, region, region2 = region,
                                      outfile = NULL, append = FALSE, ...) {
 
