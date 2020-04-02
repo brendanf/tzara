@@ -560,7 +560,7 @@ cluster_consensus.XStringSet <-
 #'        sequences to extract regions from.
 #' @param positions (\code{data.frame}) as returned by \code{\link[rITSx]{itsx}}
 #'        with \code{positions = TRUE} and \code{read_function} set; should have
-#'        columns \code{$seq} with sequence IDs (matching those in \code{seq}),
+#'        columns \code{$seq_id} with sequence IDs (matching those in \code{seq}),
 #'        \code{$region} giving the name of each region, and \code{$start} and
 #'        \code{$end} giving the start and stop location, if found, of each
 #'        region.
@@ -677,11 +677,11 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
    assert_that(
       assertthat::is.string(region),
       assertthat::is.string(region2),
-      assertthat::has_name(positions, "seq"),
+      assertthat::has_name(positions, "seq_id"),
       assertthat::has_name(positions, "region"),
       assertthat::has_name(positions, "start"),
       assertthat::has_name(positions, "end"),
-      is.character(positions$seq),
+      is.character(positions$seq_id),
       is.character(positions$region),
       is.integer(positions$start),
       is.integer(positions$end))
@@ -735,10 +735,10 @@ extract_region.ShortRead <- function(seq, positions, region, region2 = region,
       )
 
    idx <- tibble(
-      seq = as.character(seq@id),
-      idx = seq_along(.data$seq)
+      seq_id = as.character(seq@id),
+      idx = seq_along(.data$seq_id)
    ) %>%
-      dplyr::left_join(dplyr::select(p, "seq"), ., by = "seq") %>%
+      dplyr::left_join(dplyr::select(p, "seq_id"), ., by = "seq_id") %>%
       dplyr::pull("idx")
 
    if (nrow(p)) {
@@ -787,8 +787,6 @@ str_modify <- function(x, regex, replace, ...) {
       }
    }
 }
-
-# TODO add methods for DNAStringSet, QualityScaledDNAStringSet
 
 #' Reconstruct a longer region out of ASVs or consensus sequence of individual
 #' domains.
