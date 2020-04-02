@@ -93,13 +93,13 @@ combine_derep <- function(dereps, .data = NULL, ...) {
    assert_that(dplyr::n_distinct(dereps[gps]) == nrow(dereps))
 
    # get all the old mappings
-   # preserve the sequence names as "seq.id" if they are present
+   # preserve the sequence names as "seq_id" if they are present
    oldmap <- dereps
    oldmap[["oldmap"]] <- lapply(oldmap[["derep"]], `[[`, "map")
    nestedcols <- "oldmap"
    if (all(vapply(oldmap[["derep"]], assertthat::has_name, TRUE, "names"))) {
-      oldmap[["seq.id"]] <- lapply(oldmap[["derep"]], `[[`, "names")
-      nestedcols <- c(nestedcols, "seq.id")
+      oldmap[["seq_id"]] <- lapply(oldmap[["derep"]], `[[`, "names")
+      nestedcols <- c(nestedcols, "seq_id")
    }
    oldmap <- dplyr::select(oldmap, -"derep") %>%
       tidyr::unnest(cols = nestedcols) %>%
@@ -160,7 +160,7 @@ combine_derep <- function(dereps, .data = NULL, ...) {
 #' @param ... additional columns to add to the output.  Names included in the
 #'        output by default should be avoided.
 #'
-#' @details Columns \code{$derep.seq} and \code{$dada.seq} contain one sequence
+#' @details Columns \code{$derep_seq} and \code{$dada_seq} contain one sequence
 #' per read as plain character strings. Keeping a separate, dereplicated list of
 #' sequences and storing references to them may seem like it would be more
 #' memory efficient, but it is not necessary to do this explicitly, because this
@@ -174,12 +174,12 @@ combine_derep <- function(dereps, .data = NULL, ...) {
 #'     Otherwise absent unless provided in \code{...}.}
 #'     \item{\code{...} (\code{character})}{any additional arguments, passed on
 #'       to \code{\link[tibble]{tibble}}}
-#'     \item{\code{$seq.id} (\code{character})}{the sequence identifiers from
+#'     \item{\code{$seq_id} (\code{character})}{the sequence identifiers from
 #'       the original fasta/q file.}
-#'     \item{\code{$derep.idx} (\code{integer})}{the index of each sequence in
+#'     \item{\code{$derep_idx} (\code{integer})}{the index of each sequence in
 #'       \code{derep$uniques}.}
-#'     \item{\code{$derep.seq} (\code{character})}{the sequences.}
-#'     \item{\code{$dada.seq} (\code{character})}{the denoised sequences.}
+#'     \item{\code{$derep_seq} (\code{character})}{the sequences.}
+#'     \item{\code{$dada_seq} (\code{character})}{the denoised sequences.}
 #' }
 #' @export
 
@@ -187,20 +187,20 @@ dadamap <- function(derep, dada, ...) UseMethod("dadamap")
 #' @export
 dadamap.derep <- function(derep, dada, ...) {
    m <- tibble(
-      seq.id = derep$names,
-      derep.idx = derep$map,
-      derep.seq = names(derep$uniques)[.data$derep.idx],
+      seq_id = derep$names,
+      derep_idx = derep$map,
+      derep_seq = names(derep$uniques)[.data$derep_idx],
       ...
    )
 
    m <- dplyr::left_join(
       m,
       tibble(
-         dada.idx = dada$map,
-         derep.idx = seq_along(.data$dada.idx),
-         dada.seq = dada$sequence[.data$dada.idx]
+         dada_idx = dada$map,
+         derep_idx = seq_along(.data$dada_idx),
+         dada_seq = dada$sequence[.data$dada_idx]
       ),
-      by = "derep.idx"
+      by = "derep_idx"
    )
    class(m) <- c("dadamap", class(m))
    m
@@ -340,7 +340,7 @@ add_derep_names.list <- function(derep, filenames = names(derep), ...) {
 #'        \code{sread} is a named \code{list}
 #'
 #' @return a \code{\link[tibble]{tibble}} with columns: \describe{
-#'    \item{\code{$seq.id} (\code{character})}{sequence IDs, typically from the
+#'    \item{\code{$seq_id} (\code{character})}{sequence IDs, typically from the
 #'         input fastq}
 #'    \item{\code{$seq} (\code{character})}{the actual sequence reads}
 #'    \item{\code{$name} (\code{character})}{the name of the source
@@ -358,14 +358,14 @@ summarize_sread.ShortReadQ <- function(sread, ..., max_ee = Inf) {
    if (!methods::is(sread, "ShortReadQ")) {
       return(
          tibble(
-            seq.id = character(),
+            seq_id = character(),
             seq = character()
          )
       )
    }
 
    out <- tibble(
-      seq.id = as.character(sread@id),
+      seq_id = as.character(sread@id),
       seq = as.character(sread@sread),
       ...)
    ee <- rowSums(10 ^ (-1 * (methods::as(sread@quality, "matrix") / 10)),
@@ -866,7 +866,7 @@ str_modify <- function(x, regex, replace, ...) {
 #' @param ... additional arguments passed to \code{\link[dada2]{isBimeraDenovo}}
 #'        or \code{\link[dada2]{isBimeraDenovoTable}}.
 #'
-#' @return a \code{\link[tibble]{tibble}} with column "\code{seq.id}" and
+#' @return a \code{\link[tibble]{tibble}} with column "\code{seq_id}" and
 #'        \code{sample_column} (if given), as well as one column for each value
 #'        of \code{regions} and \code{output}, representing the
 #'        sub-regions/domains and the concatenated full region.
@@ -879,8 +879,8 @@ reconstruct <- function(
    output = "concat",
    use_output = c("first", "second", "no"),
    order = setdiff(regions, output),
-   read_column = "seq.id",
-   asv_column = "dada.seq",
+   read_column = "seq_id",
+   asv_column = "dada_seq",
    rawtabs = seqtabs,
    raw_column = NULL,
    raw_regions = names(rawtabs),
@@ -1036,12 +1036,12 @@ reconstruct_region <- function(region_table, output, order, use_output,
 combine_bigmaps <- function(dadamap, rawdata) {
    joincols <- intersect(colnames(dadamap), colnames(rawdata))
    dplyr::full_join(dadamap, rawdata, by = joincols) %>%
-      dplyr::group_by("seq.id") %>%
-      dplyr::filter(any(!is.na(.data$dada.idx))) %>%
+      dplyr::group_by("seq_id") %>%
+      dplyr::filter(any(!is.na(.data$dada_idx))) %>%
       dplyr::mutate(
-         seq = dplyr::coalesce(.data$dada.seq, .data$derep.seq, .data$seq)
+         seq = dplyr::coalesce(.data$dada_seq, .data$derep_seq, .data$seq)
       ) %>%
-      dplyr::select(-"derep.seq", -"derep.idx", -"dada.seq", -"dada.idx")
+      dplyr::select(-"derep_seq", -"derep_idx", -"dada_seq", -"dada_idx")
 }
 
 is_string_or_missing <- function(x) {
@@ -1053,8 +1053,8 @@ assemble_region_table <- function(
    regions = names(seqtabs),
    output,
    order,
-   read_column = "seq.id",
-   seq_column = "dada.seq",
+   read_column = "seq_id",
+   seq_column = "dada_seq",
    sample_column = NULL,
    sample_regex = NULL,
    sample_replace = NULL
@@ -1224,7 +1224,7 @@ consensus_missing_regions <- function(
    raw_table,
    order,
    maxdist = 10,
-   read_column = "seq.id",
+   read_column = "seq_id",
    ...
 ) {
    # all combinations of ASV sequences
