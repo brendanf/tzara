@@ -49,5 +49,8 @@ Suggests:
     rITSx,
     testthat (>= 2.1.0),
     covr,
-    lintr
+    lintr,
+    knitr,
+    rmarkdown
 RoxygenNote: 7.0.0
+VignetteBuilder: knitr

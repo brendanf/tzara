@@ -1,0 +1,39 @@
+---
+title: "tzara"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tzara}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(tzara)
+library(inferrnal)
+library(LSUx)
+library(ShortRead)
+```
+
+The sample sequences are the 37S pre-rDNA (including SSU, ITS1, 5.8S, ITS2, LSU) from eleven *Saccharomyces* genomes.
+```{r}
+rDNA37 <- readFasta(system.file(file.path("extdata", "RDN37.fasta"), package = "tzara"))
+```
+
+Find the 32S region
+```{r}
+pos <- lsux(rDNA37)
+```
+
+Choose the region from 5.8S to LSU5 (prior to the beginning of D5).
+
+```{r}
+extract_region(rDNA37, positions = pos, "5_8S", "LSU5")
+```
+
