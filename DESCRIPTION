@@ -32,7 +32,7 @@ Imports:
    dplyr,
    tidyselect,
    purrr,
-   tidyr,
+   tidyr (>= 1.0.0),
    stringr,
    futile.logger,
    tibble,
@@ -45,8 +45,9 @@ Imports:
    rlang,
    tictoc
 Enhances: dada2
-Suggests: 
-    rITSx,
+Suggests:
+    LSUx (>= 0.99.2),
+    rITSx (>= 0.0.4),
     testthat (>= 2.1.0),
     covr,
     lintr,
