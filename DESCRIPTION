@@ -27,6 +27,7 @@ Requires: R (>= 3.0.0)
 Imports:
    utils,
    methods,
+   stats,
    backports,
    magrittr,
    dplyr,

@@ -51,6 +51,8 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   append = FALSE,
   ...
 )
+
+\method{extract_region}{list}(seq, positions, region, region2 = region, outfile = NULL, ...)
 }
 \arguments{
 \item{seq}{(\code{character} (a file name) or a

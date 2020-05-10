@@ -82,7 +82,7 @@ function(msa_object, distance_metric = "linear", B = 100,
 
   # Return logical vector of outliers, using threshold
 
-  confidence_interval <- quantile(distribution_scores, probs = c(threshold, 1 - threshold))
+  confidence_interval <- stats::quantile(distribution_scores, probs = c(threshold, 1 - threshold))
   outliers <- (distance_scores > confidence_interval[2])
 
   return(outliers)
