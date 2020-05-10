@@ -1495,3 +1495,33 @@ map_or_consensus <- function(asvs, raw, maxdist = 10, allow_map = TRUE,
    }
    result
 }
+
+#' Change region listing from wide to long format
+#'
+#'
+#'
+#' @param pos
+#'
+#' @return
+#' @export
+#'
+#' @examples
+gather_regions <- function(pos) {
+   tidyr::pivot_longer(
+      pos,
+      cols = c(tidyselect::ends_with("_start"), tidyselect::ends_with("_end")),
+      names_to = c("region", ".value"),
+      names_pattern = "(.+)_(start|end)"
+   )
+}
+
+spread_regions <- function(pos) {
+   tidyr::pivot_wider(
+      pos,
+      names_from = "region",
+      values_from = c("start", "end")
+   ) %>%
+      magrittr::set_names(
+         stringr::str_replace(names(.), "(end|start)_(.+)", "\\2_\\1")
+      )
+}
