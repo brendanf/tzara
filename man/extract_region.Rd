@@ -3,6 +3,8 @@
 \name{extract_region}
 \alias{extract_region}
 \alias{extract_region.character}
+\alias{extract_region.DNAStringSet}
+\alias{extract_region.QualityScaledDNAStringSet}
 \alias{extract_region.ShortRead}
 \alias{extract_region.list}
 \title{Extract regions from a set of sequences (maybe with qualities)}
@@ -20,7 +22,7 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   ...
 )
 
-\method{extract_region}{ShortRead}(
+\method{extract_region}{DNAStringSet}(
   seq,
   positions,
   region,
@@ -30,7 +32,25 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   ...
 )
 
-\method{extract_region}{list}(seq, positions, region, region2 = region, outfile = NULL, ...)
+\method{extract_region}{QualityScaledDNAStringSet}(
+  seq,
+  positions,
+  region,
+  region2 = region,
+  outfile = NULL,
+  append = FALSE,
+  ...
+)
+
+\method{extract_region}{ShortRead}(
+  seq,
+  positions,
+  region,
+  region2 = region,
+  outfile = NULL,
+  append = FALSE,
+  ...
+)
 }
 \arguments{
 \item{seq}{(\code{character} (a file name) or a
@@ -39,7 +59,7 @@ sequences to extract regions from.}
 
 \item{positions}{(\code{data.frame}) as returned by \code{\link[rITSx]{itsx}}
 with \code{positions = TRUE} and \code{read_function} set; should have
-columns \code{$seq} with sequence IDs (matching those in \code{seq}),
+columns \code{$seq_id} with sequence IDs (matching those in \code{seq}),
 \code{$region} giving the name of each region, and \code{$start} and
 \code{$end} giving the start and stop location, if found, of each
 region.}

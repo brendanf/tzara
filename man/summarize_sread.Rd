@@ -24,7 +24,7 @@ than \code{max_ee}.  Default: Inf (no filtering)}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns: \describe{
-   \item{\code{$seq.id} (\code{character})}{sequence IDs, typically from the
+   \item{\code{$seq_id} (\code{character})}{sequence IDs, typically from the
         input fastq}
    \item{\code{$seq} (\code{character})}{the actual sequence reads}
    \item{\code{$name} (\code{character})}{the name of the source

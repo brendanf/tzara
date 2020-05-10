@@ -1496,16 +1496,6 @@ map_or_consensus <- function(asvs, raw, maxdist = 10, allow_map = TRUE,
    result
 }
 
-#' Change region listing from wide to long format
-#'
-#'
-#'
-#' @param pos
-#'
-#' @return
-#' @export
-#'
-#' @examples
 gather_regions <- function(pos) {
    tidyr::pivot_longer(
       pos,

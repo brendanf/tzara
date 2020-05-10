@@ -24,19 +24,19 @@ a \code{\link[tibble]{tibble}} with columns:
     Otherwise absent unless provided in \code{...}.}
     \item{\code{...} (\code{character})}{any additional arguments, passed on
       to \code{\link[tibble]{tibble}}}
-    \item{\code{$seq.id} (\code{character})}{the sequence identifiers from
+    \item{\code{$seq_id} (\code{character})}{the sequence identifiers from
       the original fasta/q file.}
-    \item{\code{$derep.idx} (\code{integer})}{the index of each sequence in
+    \item{\code{$derep_idx} (\code{integer})}{the index of each sequence in
       \code{derep$uniques}.}
-    \item{\code{$derep.seq} (\code{character})}{the sequences.}
-    \item{\code{$dada.seq} (\code{character})}{the denoised sequences.}
+    \item{\code{$derep_seq} (\code{character})}{the sequences.}
+    \item{\code{$dada_seq} (\code{character})}{the denoised sequences.}
 }
 }
 \description{
 Produce a map between denoised sequences and their original identifiers.
 }
 \details{
-Columns \code{$derep.seq} and \code{$dada.seq} contain one sequence
+Columns \code{$derep_seq} and \code{$dada_seq} contain one sequence
 per read as plain character strings. Keeping a separate, dereplicated list of
 sequences and storing references to them may seem like it would be more
 memory efficient, but it is not necessary to do this explicitly, because this

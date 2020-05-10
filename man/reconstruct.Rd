@@ -13,8 +13,8 @@ reconstruct(
   output = "concat",
   use_output = c("first", "second", "no"),
   order = setdiff(regions, output),
-  read_column = "seq.id",
-  asv_column = "dada.seq",
+  read_column = "seq_id",
+  asv_column = "dada_seq",
   rawtabs = seqtabs,
   raw_column = NULL,
   raw_regions = names(rawtabs),
@@ -137,7 +137,7 @@ If \code{FALSE}, the corresponding results will be \code{NA}.}
 or \code{\link[dada2]{isBimeraDenovoTable}}.}
 }
 \value{
-a \code{\link[tibble]{tibble}} with column "\code{seq.id}" and
+a \code{\link[tibble]{tibble}} with column "\code{seq_id}" and
        \code{sample_column} (if given), as well as one column for each value
        of \code{regions} and \code{output}, representing the
        sub-regions/domains and the concatenated full region.
