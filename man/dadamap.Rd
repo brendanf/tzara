@@ -4,14 +4,26 @@
 \alias{dadamap}
 \title{Produce a map between denoised sequences and their original identifiers.}
 \usage{
-dadamap(derep, dada, ...)
+dadamap(derep, dada, filename = NULL, seq_id = NULL, ...)
 }
 \arguments{
 \item{derep}{a \code{\link[dada2]{derep-class}} object or list of such
 objects}
 
 \item{dada}{(\link[dada2]{dada-class} object or list of such objects) the
-results of a call to \code{\link[dada2]{dada}} on \code{derep}}
+results of a call to \code{\link[dada2]{dada}} on \code{"derep"}}
+
+\item{filename}{(\code{character} of same length as \code{"derep"}) fasta/q
+file that is the source for \code{"derep"}, used for setting
+unique sequence IDs.  If \code{"derep"} is a named \code{list}, then
+the default is to assume that these filenames are the names of the
+source files (as returned by \code{\link[dada2]{derepFastq}} when multiple files are
+given). To avoid this behavior, pass an explicit \code{NULL}.}
+
+\item{seq_id}{(\code{character} or list of \code{character}) unique sequence
+identifiers for the sequences in \code{"derep"}.  These can
+alternatively be provided using argument \code{"filename"} or
+calling \code{\link{add_derep_names}} on \code{"derep"}.}
 
 \item{...}{additional columns to add to the output.  Names included in the
 output by default should be avoided.}

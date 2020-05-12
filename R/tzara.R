@@ -156,7 +156,17 @@ combine_derep <- function(dereps, .data = NULL, ...) {
 #' @param derep a \code{\link[dada2]{derep-class}} object or list of such
 #'        objects
 #' @param dada (\link[dada2]{dada-class} object or list of such objects) the
-#'        results of a call to \code{\link[dada2]{dada}} on \code{derep}
+#'        results of a call to \code{\link[dada2]{dada}} on \code{"derep"}
+#' @param seq_id (\code{character} or list of \code{character}) unique sequence
+#'        identifiers for the sequences in \code{"derep"}.  These can
+#'        alternatively be provided using argument \code{"filename"} or
+#'        calling \code{\link{add_derep_names}} on \code{"derep"}.
+#' @param filename (\code{character} of same length as \code{"derep"}) fasta/q
+#'        file that is the source for \code{"derep"}, used for setting
+#'        unique sequence IDs.  If \code{"derep"} is a named \code{list}, then
+#'        the default is to assume that these filenames are the names of the
+#'        source files (as returned by \code{\link[dada2]{derepFastq}} when multiple files are
+#'        given). To avoid this behavior, pass an explicit \code{NULL}.
 #' @param ... additional columns to add to the output.  Names included in the
 #'        output by default should be avoided.
 #'
@@ -183,11 +193,36 @@ combine_derep <- function(dereps, .data = NULL, ...) {
 #' }
 #' @export
 
-dadamap <- function(derep, dada, ...) UseMethod("dadamap")
+dadamap <- function(derep, dada, filename = NULL, seq_id = NULL, ...) UseMethod("dadamap")
 #' @export
-dadamap.derep <- function(derep, dada, ...) {
+dadamap.derep <- function(derep, dada, filename = NULL, seq_id = NULL, ...) {
+   if (is.null(seq_id)) {
+      if (is.null(filename)) {
+         if (hasName(derep, "names")) {
+            seq_id <- derep$names
+         } else if (hasName(derep, "seq_id")) {
+            seq_id <- derep$seq_id
+         } else {
+            stop(paste("sequence names for derep object must be given using",
+                       "arguments 'seq_id', 'file', or by calling",
+                       "'add_derep_names()' on the derep object."))
+         }
+      } else {
+         assertthat::assert_that(
+            assertthat::is.string(filename),
+            file.exists(filename)
+         )
+         seq_id <- names(
+            tryCatch(
+               Biostrings::readBStringSet(filename, format = "fasta"),
+               error = function(e) Biostrings::readBStringSet(filename, format = "fastq")
+            )
+         )
+      }
+   }
+
    m <- tibble(
-      seq_id = derep$names,
+      seq_id = seq_id,
       derep_idx = derep$map,
       derep_seq = names(derep$uniques)[.data$derep_idx],
       ...
@@ -207,7 +242,7 @@ dadamap.derep <- function(derep, dada, ...) {
 }
 
 #' @export
-dadamap.list <- function(derep, dada, ...) {
+dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL, ...) {
    assert_that(assertthat::are_equal(length(derep), length(dada)))
    assert_that(all(
       purrr::map_lgl(derep, is.null) == purrr::map_lgl(dada, is.null)
@@ -222,6 +257,21 @@ dadamap.list <- function(derep, dada, ...) {
       args[["name"]] <- names(derep)
       args <- args[tidyselect::vars_select(names(args), "name",
                                            tidyselect::everything())]
+   }
+   if (!is.null(filename)) {
+      assert_that(
+         is.character(filename),
+         assertthat::are_equal(length(filename), length(derep))
+      )
+      args <- c(args, filename = filename)
+   }
+   if (!is.null(seq_id)) {
+      assert_that(
+         is.list(seq_id),
+         assertthat::are_equal(length(filename), length(derep)),
+         all(purrr::map_lgl(seq_id, is.character))
+      )
+      args <- c(args, seq_id = seq_id)
    }
    args <- do.call(tibble::tibble, args) %>%
       dplyr::filter(!purrr::map_lgl(derep, is.null))
