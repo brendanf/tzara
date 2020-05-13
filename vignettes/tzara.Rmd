@@ -18,22 +18,470 @@ knitr::opts_chunk$set(
 library(tzara)
 library(inferrnal)
 library(LSUx)
-library(ShortRead)
+library(Biostrings)
 ```
 
-The sample sequences are the 37S pre-rDNA (including SSU, ITS1, 5.8S, ITS2, LSU) from eleven *Saccharomyces* genomes.
-```{r}
-rDNA37 <- readFasta(system.file(file.path("extdata", "RDN37.fasta"), package = "tzara"))
-```
+# Test data
 
-Find the 32S region
-```{r}
-pos <- lsux(rDNA37)
-```
+## Reference sequences
 
-Choose the region from 5.8S to LSU5 (prior to the beginning of D5).
+References of were downloaded from GenBank using search query 
+`("Penicillium"[organism]  AND ("internal transcribed spacer" OR "ITS" ) AND`
+`("LSU" or "28S" or "26S")) AND ( "1000"[SLEN] : "10000"[SLEN] ))` on 12 May,
+2020.
+*Penicillium* was chosen because it tends to have low variation in the rDNA.
 
 ```{r}
-extract_region(rDNA37, positions = pos, "5_8S", "LSU5")
+pen <- readDNAStringSet(
+   system.file(file.path("extdata", "penicillium_raw.fasta"),
+               package = "tzara")
+   )
+
+# protect the names so they do not get mangled by Infernal
+oldIDs <- names(pen)
+names(pen) <- seq_along(pen)
 ```
+
+The search results include `r length(pen)` sequences, with lengths varying
+between `r paste(range(width(pen)), collapse = " and ")` bp.
+In order to simulate amplicon reads, they need to be trimmed to represent the
+same regions.
+We can first search for the 5.8S rDNA using Infernal, and trim all bases before
+it starts.
+
+
+```{r}
+pos_5_8S <- cmsearch(cm_5_8S(), pen)
+```
+
+We have a list of hits for 5.8S in the sequences.
+Take only sequences with only one hit.
+
+```{r}
+pos_5_8S <- dplyr::group_by(pos_5_8S, target_name)
+pos_5_8S <- dplyr::filter(pos_5_8S, dplyr::n() == 1)
+```
+
+Remove all bases before 5.8S starts.
+
+```{r}
+pen <- pen[pos_5_8S$target_name]
+pen <- narrow(pen, start = pos_5_8S$seq_from, end = width(pen))
+```
+
+Remove duplicated sequences.
+
+```{r}
+pen <- pen[!duplicated(pen)]
+```
+
+After removing duplicates, `r length(pen)` sequences remain.
+
+Align the remaining sequences using the `DECIPHER` package.
+
+```{r}
+library(DECIPHER)
+pen_aln <- AlignSeqs(pen)
+```
+
+In order to retain as large a trimmed dataset as possible, we look for initial
+and final gaps, in order to decide where to trim the alignment.
+
+```{r}
+library(stringr)
+#find the start and end of an initial run of gaps
+start_gap <- str_locate(as.character(pen_aln), "^-+")
+# the second column is the end of the run
+start_gap <- start_gap[,2]
+# replace NA values with 0
+start_gap[is.na(start_gap)] <- 0
+
+table(start_gap)
+```
+
+Most of the sequences start at the beginning of the 5.8S model, so we can throw
+away the others without losing too much diversity.
+
+```{r}
+pen_aln <- pen_aln[start_gap == 0]
+```
+
+Now the end gaps
+```{r}
+
+#find the start and end of a final run of gaps
+end_gap <- str_locate(as.character(pen_aln), "-+$")
+# the first column is the start of the run
+end_gap <- end_gap[,1]
+# replace NA values with the width of the sequence
+end_gap[is.na(end_gap)] <- width(pen_aln)[is.na(end_gap)]
+
+table(end_gap)
+```
+
+Many sequences start the final end gap at 2181, so we can exclude shorter
+sequences, and trim longer sequences to 2180. We can also remove duplicates
+again, since some of the differences between raw sequences may not have been
+included in our selected region.
+
+```{r}
+pen_aln <- pen_aln[end_gap >= 2181]
+pen_aln <- narrow(pen_aln, start = 1, end = 2180)
+pen_aln <- pen_aln[!duplicated(pen_aln)]
+```
+
+
+`r length(pen_aln)` sequences remain.
+We can calculate a distance matrix based on the alignment, to ensure that we
+have some very similar sequences included, in order to test the ability of
+`dada2` and `tzara` do discriminate them.
+
+```{r}
+distmat <- DistanceMatrix(pen_aln, type = "dist")
+```
+
+There are `r sum(distmat <= 0.01)` pairs with a distance less than 0.01, and
+`r sum(distmat <= 0.02)` pairs with a distance less than 0.005. These are close
+to the error rate of RSII sequencing, so they will make a good test.
+
+Now that we have our test sequences, remove gaps and sequences with ambiguous
+bases, and restore the original names.
+
+```{r}
+pen2 <- gsub("-", "", as.character(pen_aln))
+pen2 <- pen2[grepl("^[ACGT]+$", pen2)]
+names(pen2) <- oldIDs[as.integer(names(pen2))]
+pen2 <- DNAStringSet(pen2)
+```
+
+## Gather theoretical error rates
+
+A quality profile from an RSII run on amplicons of around 1500 bp was collected,
+listing how many bases were assigned to each quality score for each read.
+We will use these to generate *in silico* sequences for our test data.
+
+```{r}
+quality_profile <- fst::read_fst("../inst/extdata/quality_profile.fst")
+quality_profile <- tidyr::chop(quality_profile, c(n, quality))
+qlen <- vapply(quality_profile$quality, length, 1L)
+quality_profile$n[qlen == 1] <- list(NULL)
+
+
+sample_fastq <- function(true_seq, qual_prof, prefix = NULL) {
+   n <- length(true_seq)
+   seq <- lapply(as.character(true_seq), seqinr::s2c)
+   seq <- lapply(seq, seqinr::s2n)
+   slen <- vapply(seq, length, 1L)
+   # concatenate the whole thing as one character vector
+   seq <- unlist(seq)
+   
+   # choose a quality profile for each sequence
+   qual <- dplyr::sample_n(qual_prof, !!n, replace = TRUE)
+   # choose quality scores for each base
+   qual <- mapply(sample, x = qual$quality, size = slen, prob = qual$n, replace = TRUE)
+   qual <- unlist(qual)
+   
+   # determine which bases have substitution errors
+   error <- which(rbinom(qual, size = 1, prob = pmin(1, 10^(-qual/10))) == 1)
+   # randomly change the bases
+   if (length(error) > 0) {
+      seq[error] <- (seq[error] + sample(1:3, length(error), replace = TRUE)) %% 4
+   }
+   # Translate quality scores to characters
+   qual <- as.character(Biostrings::PhredQuality(qual))
+   qual <- seqinr::s2c(qual)
+   
+   # Split back into individual sequence and scores 
+   groups <- rep(seq_along(slen), times = slen)
+   seq <- lapply(
+      split(seq, groups),
+      seqinr::n2s
+   )
+   seq <- vapply(seq, seqinr::c2s, "")
+   qual <- vapply(
+      split(qual, groups),
+      seqinr::c2s,
+      ""
+   )
+   ShortRead::ShortReadQ(
+      sread = DNAStringSet(seq),
+      quality = PhredQuality(qual),
+      id = BStringSet(paste0(prefix, "read", seq_len(n)))
+   )
+}
+```
+
+## Simulate reads
+
+We simulate five samples of 20000 reads each.
+The "true" sequence distribution is given by the sum of two exponential
+distributions.  Both vary over about 4 orders of magnitude.  The first is the
+same in all five samples, representing strains which are common to all samples, and
+the second is chosen randomly for each sample, representing strains which are
+characteristic of particular samples.
+
+For each sequence thus generated, quality scores are assigned by two-stage 
+sampling with replacement from the reference quality scores.  In the first stage,
+the full set of quality scores for one sequence from the reference is chosen.
+These are not all equivalent, because low-quality bases are not randomly
+distributed *among* reads; some reads have many low-quality bases, other reads
+are almost all very high quality bases. In the second stage, individual quality
+scores are chosen from the reference read. Individual base quality within the
+read is assumed to be non-autocorrelated and independent of read position.
+
+The generated reads are stored in temporary fastq files.
+
+```{r}
+rawdir <- file.path(tempdir(), "raw")
+dir.create(rawdir)
+
+true_seqs <- list()
+set.seed(77777)
+baserate <- sample(10^(-4*seq_along(pen2)/length(pen2)), length(pen2))
+for (i in 1:5) {
+   # sample "true" sequences from the given distribution
+   true_seq <- sample(
+      pen2,
+      size = 20000,
+      prob = baserate + sample(10^(-4*seq_along(pen2)/length(pen2)), length(pen2)),
+      replace = TRUE
+   )
+   true_seqs[[paste0("truesample", i)]] <- tibble::tibble(
+      seq_id = names(true_seq),
+      sequence = as.character(true_seq)
+   ) %>%
+      dplyr::group_by(seq_id, sequence) %>%
+      dplyr::summarize(abundance = dplyr::n())
+   unlink(file.path(rawdir, paste0("sample", i, ".fastq.gz")))
+   ShortRead::writeFastq(
+      sample_fastq(
+         true_seq = true_seq,
+         qual_prof = quality_profile,
+         prefix = paste0("sample", i, "/")
+      ),
+      file.path(rawdir, paste0("sample", i, ".fastq.gz"))
+   )
+}
+
+rawfiles <- list.files(path = rawdir, pattern = ".fastq.gz", full.names = TRUE)
+```
+
+## Standard DADA2 denoising pipeline
+
+The simulated fastq files are filtered to discard all reads containing quality
+scores less than 2 or total expected errors greater than 3, and stored in more
+temporary files.  This results in the loss of about half of the reads.
+
+```{r}
+filterdir <- file.path(tempdir(), "filter")
+dir.create(filterdir)
+filterfiles <- file.path(filterdir, basename(rawfiles))
+
+dada2::filterAndTrim(
+   fwd = rawfiles,
+   filt = filterfiles,
+   maxEE = 3,
+   truncQ = 0,
+   minQ = 2,
+   rm.phix = FALSE,
+   verbose = TRUE
+)
+```
+
+Note that only about 50% of the sequences passed quality filtering.
+
+Next, the filtered fastq files are dereplicated.
+
+```{r}
+derep_full <- dada2::derepFastq(
+   fls = filterfiles,
+   qualityType = "FastqQuality",
+   verbose = TRUE
+)
+```
+
+An error model is fit to the dereplicated, filtered reads.
+
+```{r}
+err_full <- dada2::learnErrors(
+   derep_full,
+   errorEstimationFunction = dada2::PacBioErrfun,
+   multithread = TRUE,
+   verbose = TRUE,
+   qualityType = "FastqQuality"
+)
+```
+
+The dereplicated, filtered reads are denoised with DADA.
+
+```{r}
+dada_full <- dada2::dada(
+   derep = derep_full,
+   err = err_full,
+   multithread = TRUE,
+   verbose = TRUE,
+   pool = TRUE
+)
+```
+
+## tzara pipeline
+
+First, we run LSUx on the raw reads to delimit homologous regions.
+This is the most time-consuming step.
+
+```{r}
+pos <- lapply(
+   rawfiles,
+   LSUx::lsux
+)
+```
+
+If we had collected all of these sequences with known primers, we would know
+which regions were amplified, but since they are collected from Genbank, we need
+to check.
+
+```{r}
+regions <- unique(pos[[1]]$region)
+regions
+```
+
+`LSUx` annotates the variable regions in LSU using "V" numbers (*sensu*
+Raué et al. 1988), rather then the more commonly used "D" numbers (*sensu*
+Michot et al. 1984), because every "D" number has a corresponding "V" number,
+but there are additional "V" numbers with no corresponding "D" number.  V1
+corresponds to ITS2 in eukaryotes, and V2–V6 correspond to D1–D5, which are the
+most commonly used variable regions in phylogenetics and barcoding.  LSU1, LSU2,
+LSU3, etc. refer to the conserved regions between the defined variable regions.
+
+Now we can extract the different regions into new Fastq files.
+
+```{r}
+regiondir <- character()
+regionfiles <- list()
+for (r in regions) {
+   regiondir[[r]] <- file.path(tempdir(), "regions", r)
+   dir.create(regiondir[[r]], recursive = TRUE, showWarnings = FALSE)
+   regionfiles[[r]] <- file.path(regiondir[[r]], basename(rawfiles))
+   for (i in seq_along(rawfiles)) {
+      tzara::extract_region(
+         seq = rawfiles[[i]],
+         positions = pos[[i]],
+         region = r,
+         outfile = regionfiles[[r]][[i]]
+      )
+   }
+}
+```
+
+The next steps are similar to the standard DADA2 workflow, but we perform
+quality filtering and denoising on each region independently.  First, quality
+filtering:
+
+```{r}
+filterdir <- character()
+filterfiles <- list()
+for (r in regions) {
+   filterdir[[r]] <- file.path(tempdir(), "filter", r)
+   filterfiles[[r]] <- file.path(filterdir[[r]], basename(regionfiles[[r]]))
+   dada2::filterAndTrim(
+      fwd = regionfiles[[r]],
+      filt = filterfiles[[r]],
+      maxEE = 3,
+      truncQ = 0,
+      minQ = 2,
+      rm.phix = FALSE,
+      verbose = TRUE
+   )
+}
+```
+
+Now, between 80% and 90% of reads passed quality filtering, much greater then
+the 50% for the full sequences.  This is primarily because, for a given error
+rate, a shorter sequence will have a smaller number of expected errors than a
+longer sequence.  Since the total number of expected errors is the important
+metric for DADA2 denoising, this means that we can successully denoise sequences
+with a higher error rate if the sequences are shorter.
+
+The exception is for LSU3.  Inspection of the sequences shows that this region
+is only 2-3 bp long, and thus does not pass the default `minLen=20` in
+`filterAndTrim()`.  We will exclude LSU3 from the rest of the analysis.
+
+```{r}
+regions <- setdiff(regions, "LSU3")
+```
+
+
+Next, we dereplicate the sequences.
+
+```{r}
+derep <- list()
+for (r in regions) {
+   derep[[r]] <- dada2::derepFastq(
+      fls = filterfiles[[r]],
+      qualityType = "FastqQuality",
+      verbose = TRUE
+   )
+}
+```
+
+An error model is fit to the dereplicated, filtered reads.  We could in
+in principle fit an error model to each region independently, but instead we
+do only 5.8S, because its delimitation is probably the most reliable.
+
+```{r}
+err_5_8S <- dada2::learnErrors(
+   derep[["5_8S"]],
+   errorEstimationFunction = dada2::PacBioErrfun,
+   multithread = TRUE,
+   verbose = TRUE,
+   qualityType = "FastqQuality"
+)
+```
+
+The dereplicated, filtered reads are denoised with DADA.
+
+```{r}
+dada <- list()
+for (r in regions) {
+   dada[[r]] <- dada2::dada(
+      derep = derep[[r]],
+      err = err_5_8S,
+      multithread = TRUE,
+      verbose = TRUE,
+      pool = TRUE
+   )
+}
+```
+
+Now we use the `dadamap()` function to map DADA2 ASVs back to the raw reads
+which they came from.
+
+```{r}
+dadamaps <- list()
+for (r in regions) {
+   dadamaps[[r]] <- tzara::dadamap(
+      derep = derep[[r]],
+      dada = dada[[r]],
+      filename = filterfiles[[r]],
+      region = r
+   )
+}
+```
+
+
+## Comparison
+
+Generate sample tables for the "true" data and ASVs determined by dada2 on the
+full length reads.
+
+```{r}
+sample_table_full <- dada2::makeSequenceTable(dada_full)
+
+sample_table_true <- dada2::makeSequenceTable(true_seqs)
+
+sample_table_compare <- dada2::mergeSequenceTables(sample_table_full, sample_table_true)
+```
+
+
+
 
