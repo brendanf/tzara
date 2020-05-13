@@ -1146,7 +1146,7 @@ assemble_region_table <- function(
       is_string_or_missing(sample_replace)
    )
 
-   if (is.na(sample_column)) sample_column <- NULL
+   if (!is.null(sample_column) && is.na(sample_column)) sample_column <- NULL
 
    seqtabs <- purrr::map2(
       seqtabs,
