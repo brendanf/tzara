@@ -826,7 +826,7 @@ extract_region.list <- function(seq, positions, region, region2 = region,
    purrr::reduce(out, ShortRead::append)
 }
 
-str_modify <- function(x, regex, replace, ...) {
+str_modify <- function(x, regex = NULL, replace = NULL, ...) {
    if (!is.null(regex) && !is.na(regex)) {
       assert_that(assertthat::is.string(regex))
       if (is.null(replace) || is.na(replace)) {
@@ -835,6 +835,8 @@ str_modify <- function(x, regex, replace, ...) {
          assert_that(assertthat::is.string(replace))
          str_replace(x, regex, replace, ...)
       }
+   } else {
+      x
    }
 }
 
