@@ -3,8 +3,8 @@
 \name{extract_region}
 \alias{extract_region}
 \alias{extract_region.character}
-\alias{extract_region.DNAStringSet}
-\alias{extract_region.QualityScaledDNAStringSet}
+\alias{extract_region.QualityScaledXStringSet}
+\alias{extract_region.XStringSet}
 \alias{extract_region.ShortRead}
 \alias{extract_region.list}
 \title{Extract regions from a set of sequences (maybe with qualities)}
@@ -19,26 +19,29 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   outfile = NULL,
   qualityType = "FastqQuality",
   append = FALSE,
+  format = NULL,
   ...
 )
 
-\method{extract_region}{DNAStringSet}(
+\method{extract_region}{QualityScaledXStringSet}(
   seq,
   positions,
   region,
   region2 = region,
   outfile = NULL,
   append = FALSE,
+  format = "fastq",
   ...
 )
 
-\method{extract_region}{QualityScaledDNAStringSet}(
+\method{extract_region}{XStringSet}(
   seq,
   positions,
   region,
   region2 = region,
   outfile = NULL,
   append = FALSE,
+  format = "fasta",
   ...
 )
 
@@ -55,9 +58,11 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
 \method{extract_region}{list}(seq, positions, region, region2 = region, outfile = NULL, ...)
 }
 \arguments{
-\item{seq}{(\code{character} (a file name) or a
-\code{\link[ShortRead:ShortRead-class]{ShortRead}} object) the
-sequences to extract regions from.}
+\item{seq}{(\code{character} scalar (a file name), an object belonging to
+several classes representing nucleotide sequences, a \code{character}
+vector of nucleotide sequences, or a \code{list} of any of these) the
+sequences to extract regions from. To extract from several files, use
+a \code{list} of single filenames, instead of a vector of filenames.}
 
 \item{positions}{(\code{data.frame}) as returned by \code{\link[rITSx]{itsx}}
 with \code{positions = TRUE} and \code{read_function} set; should have
@@ -86,11 +91,16 @@ filename given in fasta or fastq format.  The format is determined by
 \item{append}{(\code{logical} scalar) if \code{TRUE}, then data is appended
 to \code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
 overwritten.}
+
+\item{format}{(\code{character}) File format to read (if \code{seq} is a
+filename or list of filenames).}
 }
 \value{
-(\code{object of class \link[ShortRead:ShortRead-class]{ShortRead} or
-        \link[ShortRead:ShortReadQ-class]{ShortReadQ}}) The requested region
-        from each of the input sequences where it was found.
+(\code{object} of the same class as \code{seq}, or if \code{seq}
+        is a filename, \code{\link[Biostrings]{XStringSet}} if \code{format
+        = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet}} if
+        \code{format = "fastq"}) The requested region from each of the input
+        sequences where it was found.
 }
 \description{
 Extract regions from a set of sequences (maybe with qualities)
