@@ -1,69 +1,11 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
+language: r
+r:
+  - oldrel
+  - release
+  - devel
 cache: packages
-r_binary_packages:
-   - magrittr
-   - dplyr
-   - tidyselect
-   - purrr
-   - tidyr
-   - stringr
-   - futile.logger
-   - tibble
-   - digest
-   - assertthat
-   - rlang
-   - tictoc
-   - testthat
-   - backports
-   - matrixStats
-   - bit
-   - prettyunits
-   - bit64
-   - blob
-   - memoise
-   - snow
-   - bitops
-   - RCurl
-   - RColorBrewer
-   - kernlab
-   - e1071
-   - LiblineaR
-   - apcluster
-   - RSQlite
-   - DBI
-   - hwriter
-   - latticeExtra
-   - mclust
-   - pkgconfig
-   - clipr
-   - readr
-   - hms
-   - rex
-   - rstudioapi
-   - httr
-   - jsonlite
-   - knitr
-   - xml2
-   - lazyeval
-   - callr
-   - desc
-   - curl
-   - mime
-   - openssl
-   - highr
-   - markdown
-   - yaml
-   - xfun
-   - processx
-   - ps
-   - rprojroot
-   - askpass
-   - sys
-   - crayon
-   - withr
-   - yaml
 r_github_packages:
    - jimhester/lintr
    - brendanf/rITSx
