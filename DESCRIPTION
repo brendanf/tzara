@@ -47,10 +47,10 @@ Imports:
    tictoc
 Enhances: dada2
 Suggests:
-    LSUx (>= 0.99.2),
+    LSUx (>= 0.99.6),
     rITSx (>= 0.0.4),
     testthat (>= 2.1.0),
-    inferrnal (>= 0.99.4),
+    inferrnal (>= 0.99.5),
     covr,
     lintr,
     knitr,
