@@ -150,6 +150,65 @@ bases, and restore the original names.
 ```{r pen-ungap}
 pen2 <- gsub("-", "", as.character(pen_aln))
 pen2 <- pen2[grepl("^[ACGT]+$", pen2)]
+```
+
+For application of `tzara`, it will be useful to know which regions we have.
+If we had generated these sequences ourself, this would be dictated by our
+primer choice, so we would already know this information.
+
+```{r pen-lsux}
+pen_lsux <- LSUx::lsux(pen2)
+```
+
+We can then extract the regions to see how many variants each has, as well as
+the length distribution.
+
+```{r regions}
+regions <- unique(pen_lsux$region)
+regions
+```
+
+`LSUx` annotates the variable regions in LSU using "V" numbers (*sensu*
+Raué et al. 1988), rather then the more commonly used "D" numbers (*sensu*
+Michot et al. 1984), because every "D" number has a corresponding "V" number,
+but there are additional "V" numbers with no corresponding "D" number.  V1
+corresponds to ITS2 in eukaryotes, and V2–V6 correspond to D1–D5, which are the
+most commonly used variable regions in phylogenetics and barcoding.  LSU1, LSU2,
+LSU3, etc. refer to the conserved regions between the defined variable regions.
+
+Now we can extract the different regions.
+
+```{r region-extract}
+pen_regions <- list()
+for (r in regions) {
+   pen_regions[[r]] <- 
+      tzara::extract_region(
+         seq = pen2,
+         positions = pen_lsux,
+         region = r
+      )
+}
+```
+
+How many unique sequences are there in each region?
+
+```{r}
+for (r in regions) {
+   cat(r, ": ", dplyr::n_distinct(as.character(pen_regions[[r]]@sread)), "\n")
+}
+```
+
+What is the range of lengths in each region?
+
+```{r}
+for (r in regions) {
+   cat(r, ": ", range(width(pen_regions[[r]])), "\n")
+}
+```
+
+Note that LSU3 (the conserved region after D2) only has 3 bp in all of the sequences.
+
+```{r}
 names(pen2) <- oldIDs[as.integer(names(pen2))]
 pen2 <- DNAStringSet(pen2)
 ```
@@ -340,19 +399,6 @@ If we had collected all of these sequences with known primers, we would know
 which regions were amplified, but since they are collected from Genbank, we need
 to check.
 
-```{r}
-regions <- unique(pos[[1]]$region)
-regions
-```
-
-`LSUx` annotates the variable regions in LSU using "V" numbers (*sensu*
-Raué et al. 1988), rather then the more commonly used "D" numbers (*sensu*
-Michot et al. 1984), because every "D" number has a corresponding "V" number,
-but there are additional "V" numbers with no corresponding "D" number.  V1
-corresponds to ITS2 in eukaryotes, and V2–V6 correspond to D1–D5, which are the
-most commonly used variable regions in phylogenetics and barcoding.  LSU1, LSU2,
-LSU3, etc. refer to the conserved regions between the defined variable regions.
-
 Now we can extract the different regions into new Fastq files.
 
 ```{r region-extract}
@@ -395,7 +441,7 @@ for (r in regions) {
 }
 ```
 
-Now, between 80% and 90% of reads passed quality filtering, much greater then
+Between 80% and 90% of reads passed quality filtering, much greater then
 the 50% for the full sequences.  This is primarily because, for a given error
 rate, a shorter sequence will have a smaller number of expected errors than a
 longer sequence.  Since the total number of expected errors is the important
@@ -428,9 +474,9 @@ An error model is fit to the dereplicated, filtered reads.  We could in
 in principle fit an error model to each region independently, but instead we
 do only 5.8S, because its delimitation is probably the most reliable.
 
-```{r}
-err_5_8S <- dada2::learnErrors(
-   derep[["5_8S"]],
+```{r region-err}
+err_ITS2 <- dada2::learnErrors(
+   derep[["ITS2"]],
    errorEstimationFunction = dada2::PacBioErrfun,
    multithread = TRUE,
    verbose = TRUE,
@@ -445,7 +491,7 @@ dada <- list()
 for (r in regions) {
    dada[[r]] <- dada2::dada(
       derep = derep[[r]],
-      err = err_5_8S,
+      err = err_ITS2,
       multithread = TRUE,
       verbose = TRUE,
       pool = TRUE
@@ -467,6 +513,71 @@ for (r in regions) {
    )
 }
 ```
+
+How many unique ASVs did we get for each region?
+
+```{r region-asv-count}
+for (r in regions) {
+   cat(r, ": ", dplyr::n_distinct(dadamaps[[r]]$dada_seq), "\n")
+}
+```
+
+How many ASVs for each region are present in the true sequences?
+
+```{r region-asv-check}
+for (r in regions) {
+   cat(r, ": ", sum(purrr::map_lgl(unique(dadamaps[[r]]$dada_seq),
+                                   ~ any(grepl(.x, .y)),
+                                   as.character(pen2))), "\n")
+}
+```
+
+All of them are represented!
+
+How many sequences from each region were mapped to ASVs?
+
+```{r region-asv-reads}
+for (r in regions) {
+   cat(r, ": ", sum(!is.na(dadamaps[[r]]$dada_seq)), "\n")
+}
+```
+
+The `reconstruct()` function in `tzara` can be used to put the different reads
+in the dadamaps back together.  There are several different ways to do this,
+with different tradeoffs.
+
+### Simple concatenation
+
+The simplest method to reconstruct full-length ASVs is through simple
+concatenation of the region ASVs.
+This is very straightforward and captures all the variation that DADA2 was able
+to detect in the regions.
+However, it gives no result for reads where one or more regions did not yield an
+ASV.
+
+```{r reconstruct0}
+reconstruct0 <- dplyr::bind_rows(dadamaps) %>%
+   dplyr::select(seq_id, name, region, dada_seq) %>%
+   tidyr::pivot_wider(names_from = region, values_from = dada_seq) %>%
+   dplyr::mutate(concat = stringr::str_c(`5_8S`, ITS2, LSU1, V2, LSU2, V3))
+```
+
+This results in `r dplyr::n_distinct(reconstruct0$concat, na.rm = TRUE)`
+distinct ASVs, covering `r sum(!is.na(reconstruct0$concat))` reads.  Of the ASVs,
+`r sum(purrr::map_lgl(unique(na.omit(reconstruct0$concat)), ~ any(startsWith(.y, .x)), as.character(pen2)))`
+
+```{r}
+reconstruct1 <- tzara::reconstruct(dadamaps, allow_map = FALSE,
+                                   allow_consensus = FALSE)
+```
+
+This results in `r dplyr::n_distinct(reconstruct1$concat, na.rm = TRUE)`
+distinct ASVs, covering `r sum(!is.na(reconstruct1$concat))` reads.  Of the ASVs,
+
+```{r}
+sum(purrr::map_lgl(unique(na.omit(reconstruct1$concat)), ~ any(startsWith(.y, .x)), as.character(pen2)))
+```
+
 
 
 ## Comparison
