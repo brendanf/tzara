@@ -97,8 +97,8 @@ filename or list of filenames).}
 }
 \value{
 (\code{object} of the same class as \code{seq}, or if \code{seq}
-    is a filename, \code{\link[Biostrings]{XStringSet}} if \code{format
-    = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet}} if
+    is a filename, \code{\link[Biostrings]{XStringSet-class}} if \code{format
+    = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet-class}} if
     \code{format = "fastq"}) The requested region from each of the input
     sequences where it was found.
 }

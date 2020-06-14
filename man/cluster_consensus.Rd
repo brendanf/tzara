@@ -21,7 +21,8 @@ cluster_consensus(seq, nread = 1, ..., ncpus = 1, simplify = TRUE)
 \method{cluster_consensus}{XStringSet}(seq, nread = 1, ..., ncpus = 1, simplify = TRUE)
 }
 \arguments{
-\item{seq}{(\code{character} vector or \code{\link[Biostrings]{XStringSet}})
+\item{seq}{(\code{character} vector or
+\code{\link[Biostrings]{XStringSet-class}})
 The sequences to calculate a consensus for.}
 
 \item{nread}{(\code{integer} vector) For the purposes of calculating the
@@ -40,9 +41,9 @@ consensus. If \code{FALSE}, an object of the same type as \code{seq}
 representing the consensus sequence for reads which were included in
 the consensus, or \code{NA_character_} for reads which were initially
 \code{NA} or which were removed from the consensus alignment as
-outliers.  For the \code{\link[Biostrings]{XStringSet}} method, which
-does not allow \code{NA} entries, these elements are missing from the
-set (this can be deduced by the names).}
+outliers.  For the \code{\link[Biostrings]{XStringSet-class}} method,
+which does not allow \code{NA} entries, these elements are missing from
+the set (this can be deduced by the names).}
 
 \item{names}{(\code{character}) If \code{seq} is a \code{character} vector,
 names for the sequences.}
@@ -51,8 +52,8 @@ names for the sequences.}
 use (calculated) RNA secondary structure in alignments.}
 }
 \value{
-an \code{\link[Biostrings]{XStringSet}} representing the consensus
-sequence.
+an \code{\link[Biostrings]{XStringSet-class}} representing the
+consensus sequence.
 }
 \description{
 This algorithm assumes that the sequences "should be" identical except for

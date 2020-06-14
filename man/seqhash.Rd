@@ -13,8 +13,8 @@ seqhash(seq, algo = "xxhash32", len = NA, preserve_na = TRUE)
 \method{seqhash}{XStringSet}(seq, algo = "xxhash32", len = NA, preserve_na = TRUE)
 }
 \arguments{
-\item{seq}{(\code{character} or \code{\link[Biostrings]{XStringSet}}) the
-sequences to hash.}
+\item{seq}{(\code{character} or \code{\link[Biostrings]{XStringSet-class}})
+the sequences to hash.}
 
 \item{algo}{(\code{character}) a hash algorithm supported by
 \code{\link[digest]{digest}}. default: "xxhash32"}

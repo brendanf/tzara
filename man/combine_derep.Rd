@@ -24,9 +24,10 @@ the length of \code{dereps}.}
         "\code{map}" (\code{integer}), giving the mapping from the
         "\code{idx}"th sequence in "\code{file}" to a sequence in
         "\code{fasta}"}
-    \item{\code{$fasta} (\code{\link[Biostrings]{DNAStringSet}})}{all unique
-        sequences; the name of each sequence is an \code{integer} which
-        matches a value in \code{map$newmap}}
+    \item{\code{$fasta} (
+        \code{\link[Biostrings:XStringSet-class]{DNAStringSet-class}})}{all
+        unique sequences; the name of each sequence is an \code{integer}
+        which matches a value in \code{map$newmap}}
     }
 }
 \description{

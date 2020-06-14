@@ -61,9 +61,10 @@ flog_toc <- function(
 #'         "\code{map}" (\code{integer}), giving the mapping from the
 #'         "\code{idx}"th sequence in "\code{file}" to a sequence in
 #'         "\code{fasta}"}
-#'     \item{\code{$fasta} (\code{\link[Biostrings]{DNAStringSet}})}{all unique
-#'         sequences; the name of each sequence is an \code{integer} which
-#'         matches a value in \code{map$newmap}}
+#'     \item{\code{$fasta} (
+#'         \code{\link[Biostrings:XStringSet-class]{DNAStringSet-class}})}{all
+#'         unique sequences; the name of each sequence is an \code{integer}
+#'         which matches a value in \code{map$newmap}}
 #'     }
 #' @export
 combine_derep <- function(dereps, .data = NULL, ...) {
@@ -292,8 +293,8 @@ dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL,
 
 #' Individually hash biological sequences
 #'
-#' @param seq (\code{character} or \code{\link[Biostrings]{XStringSet}}) the
-#'     sequences to hash.
+#' @param seq (\code{character} or \code{\link[Biostrings]{XStringSet-class}})
+#'     the sequences to hash.
 #' @param algo (\code{character}) a hash algorithm supported by
 #'     \code{\link[digest]{digest}}. default: "xxhash32"
 #' @param len (\code{integer}) number of characters to keep from each hash
@@ -469,7 +470,8 @@ has_alphabet <- function(seq, alphabet) {
 #' but which has been clustered based on sequence variant identity in one
 #' subregion.
 #'
-#' @param seq (\code{character} vector or \code{\link[Biostrings]{XStringSet}})
+#' @param seq (\code{character} vector or
+#'     \code{\link[Biostrings]{XStringSet-class}})
 #'     The sequences to calculate a consensus for.
 #' @param nread (\code{integer} vector) For the purposes of calculating the
 #'     consensus, consider each read to occur \code{nread} times.  Supplying
@@ -485,9 +487,9 @@ has_alphabet <- function(seq, alphabet) {
 #'     representing the consensus sequence for reads which were included in
 #'     the consensus, or \code{NA_character_} for reads which were initially
 #'     \code{NA} or which were removed from the consensus alignment as
-#'     outliers.  For the \code{\link[Biostrings]{XStringSet}} method, which
-#'     does not allow \code{NA} entries, these elements are missing from the
-#'     set (this can be deduced by the names).
+#'     outliers.  For the \code{\link[Biostrings]{XStringSet-class}} method,
+#'     which does not allow \code{NA} entries, these elements are missing from
+#'     the set (this can be deduced by the names).
 #' @param ... passed to methods
 #'
 #' @details The sequences are first aligned using
@@ -504,8 +506,8 @@ has_alphabet <- function(seq, alphabet) {
 #' ambiguous base representing at least 50\% of the reads at that position is
 #' chosen for nucleotide sequences, or \code{"X"} for amino acids.
 #'
-#' @return an \code{\link[Biostrings]{XStringSet}} representing the consensus
-#' sequence.
+#' @return an \code{\link[Biostrings]{XStringSet-class}} representing the
+#' consensus sequence.
 #'
 #' @export
 
@@ -641,8 +643,8 @@ cluster_consensus.XStringSet <-
 #' @param ... Passed to methods.
 #'
 #' @return (\code{object} of the same class as \code{seq}, or if \code{seq}
-#'     is a filename, \code{\link[Biostrings]{XStringSet}} if \code{format
-#'     = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet}} if
+#'     is a filename, \code{\link[Biostrings]{XStringSet-class}} if \code{format
+#'     = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet-class}} if
 #'     \code{format = "fastq"}) The requested region from each of the input
 #'     sequences where it was found.
 #' @export
