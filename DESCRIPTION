@@ -38,6 +38,7 @@ Imports:
    futile.logger,
    tibble,
    digest,
+   IRanges,
    Biostrings,
    ShortRead,
    DECIPHER,
