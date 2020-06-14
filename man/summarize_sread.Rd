@@ -24,16 +24,17 @@ than \code{max_ee}.  Default: Inf (no filtering)}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns: \describe{
-   \item{\code{$seq_id} (\code{character})}{sequence IDs, typically from the
-        input fastq}
-   \item{\code{$seq} (\code{character})}{the actual sequence reads}
-   \item{\code{$name} (\code{character})}{the name of the source
-        \code{\link[ShortRead:ShortReadQ-class]{ShortReadQ}}, if \code{sread}
-        was a list. Otherwise absent.}
-   \item{\code{...}}{any other arguments passed to summarize_sread.}}
-If the input was empty, not a valid
-\code{\link[ShortRead:ShortReadQ-class]{ShortReadQ}}, or no sequences passed
-filtering, a \code{\link[tibble]{tibble}} with zero rows is returned.
+        \item{\code{$seq_id} (\code{character})}{sequence IDs, typically from
+            the input fastq}
+        \item{\code{$seq} (\code{character})}{the actual sequence reads}
+        \item{\code{$name} (\code{character})}{the name of the source
+            \code{\link[ShortRead:ShortReadQ-class]{ShortReadQ}}, if
+            \code{sread} was a list. Otherwise absent.}
+        \item{\code{...}}{any other arguments passed to summarize_sread.}}
+    If the input was empty, not a valid
+    \code{\link[ShortRead:ShortReadQ-class]{ShortReadQ}}, or no sequences
+    passed filtering, a \code{\link[tibble]{tibble}} with zero rows is
+    returned.
 }
 \description{
 Summarize one or more reads as a \code{\link[tibble]{tibble}}.

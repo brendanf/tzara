@@ -19,26 +19,26 @@ the length of \code{dereps}.}
 }
 \value{
 \code{list} with two members: \describe{
-  \item{\code{$map} (\code{\link[tibble]{tibble}})}{with columns:
-       "\code{file}" (\code{character}), "\code{idx}" (\code{integer}), and
-       "\code{map}" (\code{integer}), giving the mapping from the
-       "\code{idx}"th sequence in "\code{file}" to a sequence in
-       "\code{fasta}"}
-  \item{\code{$fasta} (\code{\link[Biostrings]{DNAStringSet}})}{all unique
-       sequences; the name of each sequence is an \code{integer} which
-       matches a value in \code{map$newmap}}
-  }
+    \item{\code{$map} (\code{\link[tibble]{tibble}})}{with columns:
+        "\code{file}" (\code{character}), "\code{idx}" (\code{integer}), and
+        "\code{map}" (\code{integer}), giving the mapping from the
+        "\code{idx}"th sequence in "\code{file}" to a sequence in
+        "\code{fasta}"}
+    \item{\code{$fasta} (\code{\link[Biostrings]{DNAStringSet}})}{all unique
+        sequences; the name of each sequence is an \code{integer} which
+        matches a value in \code{map$newmap}}
+    }
 }
 \description{
 Combine DADA2 \code{\link[dada2:derep-class]{derep}} objects into master map
 }
 \details{
 To be useful for further analysis, each sequence should be uniquely
- identified.  This can be done in several ways:
-  \itemize{
-    \item{\code{dereps} is a named \code{list} with unique names;}
-    \item{\code{dereps} is a \code{\link[tibble]{tibble}} with columns (other
-          than "derep") which uniquely identify the rows;}
-    \item{\code{.data} is provided and its rows are unique; or}
-    \item{\code{...} is provided and its combinations are unique.}}
+    identified.  This can be done in several ways:
+    \itemize{
+        \item{\code{dereps} is a named \code{list} with unique names;}
+        \item{\code{dereps} is a \code{\link[tibble]{tibble}} with columns
+            (other than "derep") which uniquely identify the rows;}
+        \item{\code{.data} is provided and its rows are unique; or}
+        \item{\code{...} is provided and its combinations are unique.}}
 }

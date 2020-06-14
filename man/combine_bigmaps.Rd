@@ -14,7 +14,7 @@ combine_bigmaps(dadamap, rawdata)
 }
 \value{
 a \code{\link[tibble]{tibble}} giving the sequences for each region
-        for each read (uniquely identified by all other columns)
+    for each read (uniquely identified by all other columns)
 }
 \description{
 Combine raw and denoised reads from multiple regions of the same sequences.

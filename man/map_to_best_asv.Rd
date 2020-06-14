@@ -19,26 +19,26 @@ a raw read and an ASV for the read to be mapped to the ASV.}
 }
 \value{
 a \code{character} vector the same length as \code{asvs}, which has
-   the closest ASV for each read.
+    the closest ASV for each read.
 }
 \description{
 Replace unmapped raw reads with the nearest ASV
 }
 \details{
 The value for element \code{i} of the result is determined as
- follows:
-  \enumerate{
-    \item{\code{asvs[i]} is non-\code{NA}: the value from \code{asvs} is
-     used.}
-    \item{\code{asvs[i]} and \code{raw[i]} are both \code{NA}:
-     \code{\link{NA_character_}}}
-    \item{\code{asvs[i]} is \code{NA}, \code{raw[i]} is non-\code{NA}:
-     \enumerate{
-      \item{\code{raw[i]} is less than \code{maxdist} in edit distance from
-       at least one of the non-\code{NA} sequences in \code{asvs}: the value
-       from \code{asvs} which has the smallest edit distance from
-       \code{raw[i]} is used.}
-      \item{\code{raw[i]} is not less than \code{maxdist} in edit distance
-       from at least one of the non-\code{NA} sequences in \code{asvs}:
-       \code{NA_character_}}}}}
+   follows:
+   \enumerate{
+       \item{\code{asvs[i]} is non-\code{NA}: the value from \code{asvs} is
+           used.}
+       \item{\code{asvs[i]} and \code{raw[i]} are both \code{NA}:
+           \code{\link{NA_character_}}}
+       \item{\code{asvs[i]} is \code{NA}, \code{raw[i]} is non-\code{NA}:
+           \enumerate{
+               \item{\code{raw[i]} is less than \code{maxdist} in edit
+                   distance from at least one of the non-\code{NA} sequences
+                   in \code{asvs}: the value from \code{asvs} which has the
+                   smallest edit distance from \code{raw[i]} is used.}
+               \item{\code{raw[i]} is not less than \code{maxdist} in edit
+                   distance from at least one of the non-\code{NA} sequences
+                   in \code{asvs}: \code{NA_character_}}}}}
 }

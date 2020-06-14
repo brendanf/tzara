@@ -4,7 +4,7 @@
 \alias{dadamap}
 \title{Produce a map between denoised sequences and their original identifiers.}
 \usage{
-dadamap(derep, dada, filename, seq_id, ...)
+dadamap(derep, dada, filename = NULL, seq_id = NULL, ...)
 }
 \arguments{
 \item{derep}{a \code{\link[dada2]{derep-class}} object or list of such
@@ -17,8 +17,9 @@ results of a call to \code{\link[dada2]{dada}} on \code{"derep"}}
 file that is the source for \code{"derep"}, used for setting
 unique sequence IDs.  If \code{"derep"} is a named \code{list}, then
 the default is to assume that these filenames are the names of the
-source files (as returned by \code{\link[dada2]{derepFastq}} when multiple files are
-given). To avoid this behavior, pass an explicit \code{NULL}.}
+source files (as returned by \code{\link[dada2]{derepFastq}} when
+multiple files are given). To avoid this behavior, pass an explicit
+\code{NULL}.}
 
 \item{seq_id}{(\code{character} or list of \code{character}) unique sequence
 identifiers for the sequences in \code{"derep"}.  These can
@@ -30,28 +31,29 @@ output by default should be avoided.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns:
-  \describe{
-    \item{\code{$name} (\code{character})}{names from \code{derep}, if it is
-    a named list of \code{\link[=add_derep_names]{named_derep}} objects.
-    Otherwise absent unless provided in \code{...}.}
-    \item{\code{...} (\code{character})}{any additional arguments, passed on
-      to \code{\link[tibble]{tibble}}}
-    \item{\code{$seq_id} (\code{character})}{the sequence identifiers from
-      the original fasta/q file.}
-    \item{\code{$derep_idx} (\code{integer})}{the index of each sequence in
-      \code{derep$uniques}.}
-    \item{\code{$derep_seq} (\code{character})}{the sequences.}
-    \item{\code{$dada_seq} (\code{character})}{the denoised sequences.}
-}
+    \describe{
+        \item{\code{$name} (\code{character})}{names from \code{derep}, if it
+            is a named list of \code{\link[=add_derep_names]{named_derep}}
+            objects. Otherwise absent unless provided in \code{...}.}
+        \item{\code{...} (\code{character})}{any additional arguments, passed
+            on to \code{\link[tibble]{tibble}}}
+        \item{\code{$seq_id} (\code{character})}{the sequence identifiers
+            from the original fasta/q file.}
+        \item{\code{$derep_idx} (\code{integer})}{the index of each sequence
+            in \code{derep$uniques}.}
+        \item{\code{$derep_seq} (\code{character})}{the sequences.}
+        \item{\code{$dada_seq} (\code{character})}{the denoised sequences.}
+    }
 }
 \description{
 Produce a map between denoised sequences and their original identifiers.
 }
 \details{
 Columns \code{$derep_seq} and \code{$dada_seq} contain one sequence
-per read as plain character strings. Keeping a separate, dereplicated list of
-sequences and storing references to them may seem like it would be more
-memory efficient, but it is not necessary to do this explicitly, because this
-is what R already does with \code{character} vectors; only one copy of each
-unique string is actually kept in memory, and everything else is pointers.
+    per read as plain character strings. Keeping a separate, dereplicated
+    list of sequences and storing references to them may seem like it would
+    be more memory efficient, but it is not necessary to do this explicitly,
+    because this is what R already does with \code{character} vectors; only
+    one copy of each unique string is actually kept in memory, and everything
+    else is pointers.
 }

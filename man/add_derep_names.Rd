@@ -26,9 +26,9 @@ add_derep_names(derep, ...)
 }
 \value{
 (object of class \code{derep}, or a list of such objects) a
-        shallow copy of \code{derep}, with an additional member
-        "\code{$names}", giving the identifiers for the sequences from the
-        original fasta/q file.
+    shallow copy of \code{derep}, with an additional member
+    "\code{$names}", giving the identifiers for the sequences from the
+    original fasta/q file.
 }
 \description{
 Add sequence names to a derep object

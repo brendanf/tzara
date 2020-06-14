@@ -26,7 +26,7 @@ which identifies different reads.}
 }
 \value{
 an \code{character} vector giving the read IDs of
-       \code{region_table} which were detected as bimeras.
+    \code{region_table} which were detected as bimeras.
 }
 \description{
 Check for bimeras in a subset of regions

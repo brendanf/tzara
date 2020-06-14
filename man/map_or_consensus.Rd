@@ -41,8 +41,8 @@ and/or consensus building, remaining raw reads are taken as they are. If
 }
 \value{
 a \code{character} vector the same length as \code{asvs}, which has
-   the closest ASV for each read if any ASVs are non-missing, or the cluster
-   consensus values for raw reads which were non-missing and not outliers.
+    the closest ASV for each read if any ASVs are non-missing, or the cluster
+    consensus values for raw reads which were non-missing and not outliers.
 }
 \description{
 This function is intended to be run on reads from a single sub-region/domain,

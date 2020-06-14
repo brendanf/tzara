@@ -97,10 +97,10 @@ filename or list of filenames).}
 }
 \value{
 (\code{object} of the same class as \code{seq}, or if \code{seq}
-        is a filename, \code{\link[Biostrings]{XStringSet}} if \code{format
-        = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet}} if
-        \code{format = "fastq"}) The requested region from each of the input
-        sequences where it was found.
+    is a filename, \code{\link[Biostrings]{XStringSet}} if \code{format
+    = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet}} if
+    \code{format = "fastq"}) The requested region from each of the input
+    sequences where it was found.
 }
 \description{
 Extract regions from a set of sequences (maybe with qualities)

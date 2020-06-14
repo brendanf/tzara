@@ -19,6 +19,6 @@ Test if all characters in a character vector are members of an alphabet.
 }
 \details{
 This function internally uses regular expressions, so
-         \code{alphabet} should not begin with "^" or contain "\\".  "-",
-         which commonly represents a gap, is handled correctly.
+    \code{alphabet} should not begin with "^" or contain "\\".  "-",
+    which commonly represents a gap, is handled correctly.
 }

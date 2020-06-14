@@ -34,12 +34,12 @@ region is conserved.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns:
-        \describe{
-          \item{chimset}{(\code{list} of \code{character}) the set of regions
-              (usually 3) which were checked in each row.}
-          \item{chims}{\code{list} of \code{character}) the sequence IDs of
-              the reads which were identified as chimeric for each set of
-              regions}}
+    \describe{
+        \item{chimset}{(\code{list} of \code{character}) the set of regions
+            (usually 3) which were checked in each row.}
+        \item{chims}{\code{list} of \code{character}) the sequence IDs of
+            the reads which were identified as chimeric for each set of
+            regions}}
 }
 \description{
 Find chimeras in adjacent variable-conserved-variable domain triplets

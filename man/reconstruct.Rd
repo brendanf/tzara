@@ -30,23 +30,23 @@ reconstruct(
 }
 \arguments{
 \item{seqtabs}{(\code{list} of \code{data.frame}) with columns
-\code{read_column}, \code{asv_column}, and optionally \code{sample_column}.
-Any additional columns are ignored.  \code{read_column} should give a unique
-ID for each sequencing read, and \code{asv_column} should give the denoised
-sequence for the read.}
+\code{read_column}, \code{asv_column}, and optionally
+\code{sample_column}. Any additional columns are ignored.
+\code{read_column} should give a unique ID for each sequencing read, and
+\code{asv_column} should give the denoised sequence for the read.}
 
 \item{regions}{(\code{character} vector with the same length as
-\code{seqtabs}) The names of the regions/domains represented by each of the
-tables in \code{seqtabs}.  If not supplied, then \code{seqtabs} should be
-named by the regions.}
+\code{seqtabs}) The names of the regions/domains represented by each of
+the tables in \code{seqtabs}.  If not supplied, then \code{seqtabs}
+should be named by the regions.}
 
 \item{regions_regex}{(\code{character} scalar, or \code{NULL})
 A \link[stringi:stringi-search-regex]{regular expression}. If
-\code{regions_regex} is given but \code{regions_replace} is not, then only
-the part of the entries in \code{regions} matching the regex
-are used to define samples (using \code{\link[stringr]{str_extract}}).  If
-\code{regions_replace} is also used, then the regex is instead replaced by
-\code{regions_replace} (using \code{\link[stringr]{str_replace}}).
+\code{regions_regex} is given but \code{regions_replace} is not, then
+only the part of the entries in \code{regions} matching the regex are
+used to define samples (using \code{\link[stringr]{str_extract}}).  If
+\code{regions_replace} is also used, then the regex is instead replaced
+by \code{regions_replace} (using \code{\link[stringr]{str_replace}}).
 \code{NA_character} is treated the same way as \code{NULL}.}
 
 \item{regions_replace}{(\code{character} scalar, or \code{NULL})
@@ -55,11 +55,11 @@ Replacement string for \code{regions_regex}.
 
 \item{output}{(\code{character} scalar or named list of \code{character}
 vectors) If a \code{character} scalar, then the name to be used for the
-(single) output region.  In this case the region will be the concatenation
-of all the regions in \code{order}.  Alternatively, a list where the names
-are the names of the output regions, and the values are \code{character}
-vectors giving the regions which should be concatenated for each output
-region.}
+(single) output region.  In this case the region will be the
+concatenation of all the regions in \code{order}.  Alternatively, a list
+where the names are the names of the output regions, and the values are
+\code{character} vectors giving the regions which should be concatenated
+for each output region.}
 
 \item{use_output}{(one of \code{"first"}, \code{"second"}, or \code{"no"}) If
 one of the regions given by \code{output} is also present in
@@ -138,9 +138,9 @@ or \code{\link[dada2]{isBimeraDenovoTable}}.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with column "\code{seq_id}" and
-       \code{sample_column} (if given), as well as one column for each value
-       of \code{regions} and \code{output}, representing the
-       sub-regions/domains and the concatenated full region.
+    \code{sample_column} (if given), as well as one column for each value
+    of \code{regions} and \code{output}, representing the
+    sub-regions/domains and the concatenated full region.
 }
 \description{
 The sequences from each denoised sub-region/domain are concatenated to create

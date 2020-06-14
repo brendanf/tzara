@@ -29,7 +29,7 @@ string. \code{NA} (the default) to keep all characters.}
 }
 \value{
 a \code{character} vector of the same length as \code{seq},
-        with the hashed sequences.
+    with the hashed sequences.
 }
 \description{
 Individually hash biological sequences
