@@ -79,7 +79,7 @@ After removing duplicates, `r length(pen)` sequences remain.
 
 Align the remaining sequences using the `DECIPHER` package.
 
-```{r}
+```{r pan-aln}
 library(DECIPHER)
 pen_aln <- AlignSeqs(pen)
 ```
@@ -87,7 +87,7 @@ pen_aln <- AlignSeqs(pen)
 In order to retain as large a trimmed dataset as possible, we look for initial
 and final gaps, in order to decide where to trim the alignment.
 
-```{r}
+```{r start-gap}
 library(stringr)
 #find the start and end of an initial run of gaps
 start_gap <- str_locate(as.character(pen_aln), "^-+")
@@ -102,12 +102,12 @@ table(start_gap)
 Most of the sequences start at the beginning of the 5.8S model, so we can throw
 away the others without losing too much diversity.
 
-```{r}
+```{r trim-start}
 pen_aln <- pen_aln[start_gap == 0]
 ```
 
 Now the end gaps
-```{r}
+```{r end-gap}
 
 #find the start and end of a final run of gaps
 end_gap <- str_locate(as.character(pen_aln), "-+$")
@@ -124,7 +124,7 @@ sequences, and trim longer sequences to 2180. We can also remove duplicates
 again, since some of the differences between raw sequences may not have been
 included in our selected region.
 
-```{r}
+```{r trim-ends}
 pen_aln <- pen_aln[end_gap >= 2181]
 pen_aln <- narrow(pen_aln, start = 1, end = 2180)
 pen_aln <- pen_aln[!duplicated(pen_aln)]
@@ -136,7 +136,7 @@ We can calculate a distance matrix based on the alignment, to ensure that we
 have some very similar sequences included, in order to test the ability of
 `dada2` and `tzara` do discriminate them.
 
-```{r}
+```{r pen-distmat}
 distmat <- DistanceMatrix(pen_aln, type = "dist")
 ```
 
@@ -147,7 +147,7 @@ to the error rate of RSII sequencing, so they will make a good test.
 Now that we have our test sequences, remove gaps and sequences with ambiguous
 bases, and restore the original names.
 
-```{r}
+```{r pen-ungap}
 pen2 <- gsub("-", "", as.character(pen_aln))
 pen2 <- pen2[grepl("^[ACGT]+$", pen2)]
 names(pen2) <- oldIDs[as.integer(names(pen2))]
@@ -329,7 +329,7 @@ dada_full <- dada2::dada(
 First, we run LSUx on the raw reads to delimit homologous regions.
 This is the most time-consuming step.
 
-```{r}
+```{r lsux}
 pos <- lapply(
    rawfiles,
    LSUx::lsux
@@ -355,7 +355,7 @@ LSU3, etc. refer to the conserved regions between the defined variable regions.
 
 Now we can extract the different regions into new Fastq files.
 
-```{r}
+```{r region-extract}
 regiondir <- character()
 regionfiles <- list()
 for (r in regions) {
@@ -377,7 +377,7 @@ The next steps are similar to the standard DADA2 workflow, but we perform
 quality filtering and denoising on each region independently.  First, quality
 filtering:
 
-```{r}
+```{r region-filter}
 filterdir <- character()
 filterfiles <- list()
 for (r in regions) {
@@ -413,7 +413,7 @@ regions <- setdiff(regions, "LSU3")
 
 Next, we dereplicate the sequences.
 
-```{r}
+```{r region-derep}
 derep <- list()
 for (r in regions) {
    derep[[r]] <- dada2::derepFastq(
@@ -440,7 +440,7 @@ err_5_8S <- dada2::learnErrors(
 
 The dereplicated, filtered reads are denoised with DADA.
 
-```{r}
+```{r region-dada}
 dada <- list()
 for (r in regions) {
    dada[[r]] <- dada2::dada(
@@ -456,7 +456,7 @@ for (r in regions) {
 Now we use the `dadamap()` function to map DADA2 ASVs back to the raw reads
 which they came from.
 
-```{r}
+```{r dadamap}
 dadamaps <- list()
 for (r in regions) {
    dadamaps[[r]] <- tzara::dadamap(
