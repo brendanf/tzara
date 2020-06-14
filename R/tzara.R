@@ -1323,9 +1323,9 @@ find_region_chimeras <- function(region_table, chimset, sample_column,
             as.matrix() %>%
             dada2::isBimeraDenovoTable(...)
       } else {
-         table(seqs) %>% {
-            tibble(abundance = ., sequence = names(.))
-         } %>%
+         table(seqs) %>%
+            tibble(abundance = ., sequence = names(.)) %>%
+            as.data.frame() %>%
             dada2::isBimeraDenovo(...)
       }
    flog_toc("TRACE")
