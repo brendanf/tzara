@@ -4,7 +4,7 @@
 \alias{dadamap}
 \title{Produce a map between denoised sequences and their original identifiers.}
 \usage{
-dadamap(derep, dada, filename = NULL, seq_id = NULL, ...)
+dadamap(derep, dada, filename, seq_id, ...)
 }
 \arguments{
 \item{derep}{a \code{\link[dada2]{derep-class}} object or list of such
