@@ -559,7 +559,9 @@ cluster_consensus.XStringSet <-
       stop("Unknown sequence class")
    }
 
-   flog.info("Calculating consensus of %d sequences...", length(seq))
+   flog.info("Calculating consensus of %d sequences (%d unique)...",
+             length(seq),
+             sum(nread))
    tictoc::tic("cluster_consensus")
    on.exit(flog_toc("DEBUG"))
 
