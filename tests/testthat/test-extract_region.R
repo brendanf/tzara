@@ -11,7 +11,7 @@ test_ShortRead <- methods::as(test_seq, "ShortRead")
 test_DNAStringSet <- Biostrings::DNAStringSet(test_seq)
 test_RNAStringSet <- Biostrings::RNAStringSet(test_DNAStringSet)
 test_fasta <- tempfile("test", fileext = ".fasta.gz")
-Biostrings::writeXStringSet(test_DNAStringSet, test_fasta)
+Biostrings::writeXStringSet(test_DNAStringSet, test_fasta, compress = TRUE)
 test_outfasta <- tempfile("test", fileext = ".fasta.gz")
 extract_region(test_fasta, test_pos, region = "C", outfile = test_outfasta)
 

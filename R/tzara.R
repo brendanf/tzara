@@ -616,6 +616,79 @@ cluster_consensus.XStringSet <-
         result
     }
 
+is_gzname <- function(name) endsWith(name, ".gz")
+
+detect_format <- function(name, format) {
+    if (is.null(name)) return(NULL)
+    if (!is.null(format)) {
+        assertthat::assert_that(
+            assertthat::is.string(format),
+            format %in% c("fasta", "fastq")
+        )
+        return(format)
+    }
+    nogz <- gsub("\\.gz$", "", name)
+    format <- if (endsWith(nogz, ".fasta")) {
+        "fasta"
+    } else if (endsWith(nogz, ".fastq")) {
+        "fastq"
+    } else {
+        futile.logger::flog.warn(
+            "Unable to determine intended format of '%s'",
+            name
+        )
+    }
+    return("fasta")
+}
+
+write_region <- function(
+    seq, outfile = NULL, append = FALSE, format = NULL, compress = NULL) {
+    UseMethod("write_region")
+}
+
+write_region.ShortRead <- function(
+    seq, outfile = NULL, append = FALSE, format = NULL, compress = NULL) {
+    if (is.null(outfile)) return()
+    format <- detect_format(outfile, format)
+    if (is.null(compress)) compress <- is_gzname(outfile)
+    mode <- if (isTRUE(append)) "a" else "w"
+    if (format == "fastq") {
+        ShortRead::writeFastq(
+            seq, outfile, mode = mode, compress = compress
+        )
+    } else {
+        ShortRead::writeFasta(
+            seq, outfile, mode = mode, compress = compress
+        )
+    }
+}
+
+write_region.XStringSet <- function(
+    seq, outfile = NULL, append = FALSE, format = NULL, compress = NULL) {
+    if (is.null(outfile)) return()
+    format <- detect_format(outfile, format)
+    if (is.null(compress)) compress <- is_gzname(outfile)
+    Biostrings::writeXStringSet(
+            seq, outfile, append = append, compress = compress, format = format
+        )
+}
+
+write_region.QualityScaledXStringSet <- function(
+    seq, outfile = NULL, append = FALSE, format = NULL, compress = NULL) {
+    if (is.null(outfile)) return()
+    format <- detect_format(outfile, format)
+    if (format == "fastq") {
+        if (is.null(compress)) compress <- is_gzname(outfile)
+        Biostrings::writeQualityScaledXStringSet(
+            seq, outfile, append = append, compress = compress
+        )
+    } else NextMethod()
+}
+
+get_id <- function(x) UseMethod("get_id")
+get_id.ShortRead <- function(x) as.character(ShortRead::id(x))
+get_id.default <- names
+
 #' Extract regions from a set of sequences (maybe with qualities)
 #'
 #' @param seq (\code{character} scalar (a file name), an object belonging to
@@ -638,78 +711,33 @@ cluster_consensus.XStringSet <-
 #' @param outfile (\code{character}) If given, the output will be written to the
 #'     filename given in fasta or fastq format.  The format is determined by
 #'     \code{seq}, not by the extension of \code{outfile}.
-#' @param format (\code{character}) File format to read (if \code{seq} is a
-#'     filename or list of filenames).
-#' @param ... Passed to methods.
-#'
-#' @return (\code{object} of the same class as \code{seq}, or if \code{seq}
-#'     is a filename, \code{\link[Biostrings]{XStringSet-class}} if \code{format
-#'     = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet-class}} if
-#'     \code{format = "fastq"}) The requested region from each of the input
-#'     sequences where it was found.
-#' @export
-extract_region <- function(seq, positions, region, region2 = region,
-                           outfile = NULL, ...)
-    UseMethod("extract_region")
-
-#' @param qualityType (\code{character} scalar) fastq file quality encoding; see
-#'     \code{\link[ShortRead]{readFastq}}.
 #' @param append (\code{logical} scalar) if \code{TRUE}, then data is appended
 #'     to \code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
 #'     overwritten.
-#' @rdname extract_region
+#' @param format (\code{character}) File format to write (if \code{outfile} is
+#'     given). Default is to guess based on ".fasta[.gz]" or ".fastq[.gz]"
+#'     extension.
+#' @param compress (\code{logical} scalar or NULL) Whether to gz-compress
+#'     \code{outfile}. Default is to detect based on presence of ".gz"
+#'     extension.
+#' @param ... Passed to methods.
+#'
+#' @return (\code{object} of the same class as \code{seq}, or if \code{seq}
+#'     is a filename, \code{\link[Biostrings]{XStringSet-class}} or
+#'     \code{\link[Biostrings]{QualityScaledXStringSet-class}} depending on the
+#'     format of the file) The requested region from each of the input
+#'     sequences where it was found.
 #' @export
-extract_region.character <- function(seq, positions, region, region2 = region,
-                                     outfile = NULL,
-                                     qualityType = "FastqQuality", #nolint
+extract_region <- function(seq, positions, region, region2 = region,
+                           outfile = NULL, append = FALSE, format,
+                           compress = NULL,
+                           ...)
+    UseMethod("extract_region")
 
-                                     append = FALSE,
-                                     format = NULL, ...) {
-    assert_that(assertthat::is.flag(append))
+do_extract_region <- function(seq, positions, region, region2 = region,
+                              outfile = NULL, append = FALSE,
+                              format = NULL, compress = NULL, ...) {
 
-    if (length(seq) == 1 && file.exists(seq)) {
-        assert_that(is.data.frame(positions))
-        seq <- tryCatch(
-            Biostrings::readBStringSet(seq, format = "fasta"),
-            error = function(e) {
-                methods::as(
-                    ShortRead::readFastq(seq, qualityType = "FastqQuality"),
-                    "QualityScaledXStringSet"
-                )
-            }
-        )
-
-        extract_region(seq = seq,
-                       positions = positions,
-                       region = region,
-                       region2 = region2,
-                       outfile = outfile,
-                       append = append,
-                       ...)
-    } else {
-        seq <- Biostrings::BStringSet(seq)
-        out <- extract_region(seq, positions, region, region2, outfile,
-                              qualityType, append, format, ...)
-        as.character(out)
-    }
-}
-
-#' @rdname extract_region
-#' @export
-extract_region.QualityScaledXStringSet <- function(seq, positions, region,
-                                                   region2 = region, outfile = NULL,
-                                                   append = FALSE, format = "fastq", ...) {
-    extract_region.XStringSet(seq, positions, region, region2, outfile,
-                              append, format, ...)
-
-}
-
-
-#' @rdname extract_region
-#' @export
-extract_region.XStringSet <- function(seq, positions, region, region2 = region,
-                                      outfile = NULL, append = FALSE,
-                                      format = "fasta", ...) {
     assert_that(
         assertthat::is.string(region),
         assertthat::is.string(region2),
@@ -732,15 +760,13 @@ extract_region.XStringSet <- function(seq, positions, region, region2 = region,
         # make sure the file exists even if we don't have anything to write.
         if (file.exists(outfile) && !isTRUE(append)) file.remove(outfile)
         if (!file.exists(outfile)) {
-            Biostrings::writeXStringSet(Biostrings::BStringSet(), outfile)
+            write_region(seq[FALSE], outfile, append = FALSE, format, compress)
         }
     }
 
     # if the region is "full", then we don't need to cut anything.
     if (region %in% c("full", "long", "short")) {
-        if (!is.null(outfile)) {
-            Biostrings::writeXStringSet(seq, outfile)
-        }
+        write_region(seq, outfile, append, format, compress)
         return(seq)
     }
 
@@ -764,7 +790,7 @@ extract_region.XStringSet <- function(seq, positions, region, region2 = region,
         )
 
     idx <- tibble(
-        seq_id = as.character(names(seq)),
+        seq_id = get_id(seq),
         idx = seq_along(.data$seq_id)
     ) %>%
         dplyr::left_join(dplyr::select(p, "seq_id"), ., by = "seq_id") %>%
@@ -772,102 +798,62 @@ extract_region.XStringSet <- function(seq, positions, region, region2 = region,
 
     if (nrow(p)) {
         out <- IRanges::narrow(seq[idx], start = p$start, end = p$end)
-        if (!is.null(outfile)) {
-            Biostrings::writeXStringSet(out, outfile, append = TRUE)
-        }
+        write_region(out, outfile, append = TRUE, format, compress)
     } else {
         out <- seq[FALSE]
     }
     return(out)
+}
 
+#' @param qualityType (\code{character} scalar) fastq file quality encoding; see
+#'     \code{\link[ShortRead]{readFastq}}.
+#' @rdname extract_region
+#' @export
+extract_region.character <- function(seq, positions, region, region2 = region,
+                                     outfile = NULL,
+                                     qualityType = "FastqQuality", #nolint
+                                     append = FALSE,
+                                     format = NULL,
+                                     compress = NULL, ...) {
+    assert_that(assertthat::is.flag(append),
+                is.null(format) || format %in% c("fasta", "fastq"))
+
+    if (length(seq) == 1 && file.exists(seq)) {
+        assert_that(is.data.frame(positions))
+        seq <- tryCatch(
+            Biostrings::readBStringSet(seq, format = "fasta"),
+            error = function(e) {
+                methods::as(
+                    ShortRead::readFastq(seq, qualityType = "FastqQuality"),
+                    "QualityScaledXStringSet"
+                )
+            }
+        )
+
+        do_extract_region(seq = seq,
+                          positions = positions,
+                          region = region,
+                          region2 = region2,
+                          outfile = outfile,
+                          append = append,
+                          format = format,
+                          compress = compress,
+                          ...)
+    } else {
+        seq <- Biostrings::BStringSet(seq)
+        out <- do_extract_region(seq, positions, region, region2, outfile,
+                              qualityType, append, format, compress, ...)
+        as.character(out)
+    }
 }
 
 #' @rdname extract_region
 #' @export
-extract_region.ShortRead <- function(seq, positions, region, region2 = region,
-                                     outfile = NULL, append = FALSE, ...) {
+extract_region.XStringSet <- do_extract_region
 
-    assert_that(
-        assertthat::is.string(region),
-        assertthat::is.string(region2),
-        assertthat::has_name(positions, "seq_id"),
-        assertthat::has_name(positions, "region"),
-        assertthat::has_name(positions, "start"),
-        assertthat::has_name(positions, "end"),
-        is.character(positions$seq_id),
-        is.character(positions$region),
-        is.integer(positions$start),
-        is.integer(positions$end))
-
-    if (!is.null(outfile)) {
-        assert_that(assertthat::is.string(outfile))
-        #create the output directory if needed
-        dir.create(dirname(outfile), recursive = TRUE, showWarnings = FALSE)
-        assert_that(dir.exists(dirname(outfile)))
-
-        # make sure the file exists even if we don't have anything to write.
-        if (file.exists(outfile) && !isTRUE(append)) file.remove(outfile)
-        if (!file.exists(outfile)) {
-            if (methods::is(seq, "ShortReadQ")) {
-                ShortRead::writeFastq(ShortRead::ShortReadQ(), outfile)
-            } else {
-                ShortRead::writeFasta(ShortRead::ShortRead(), outfile)
-            }
-        }
-    }
-
-    # if the region is "full", then we don't need to cut anything.
-    if (region %in% c("full", "long", "short")) {
-        if (!is.null(outfile)) {
-            if (methods::is(seq, "ShortReadQ")) {
-                ShortRead::writeFastq(seq, outfile, mode = "a")
-            } else {
-                ShortRead::writeFasta(seq, outfile, mode = "a")
-            }
-        }
-        return(seq)
-    }
-
-    p <- positions %>%
-        tidyr::gather(
-            key = "border", value = "loc",
-            "start", "end") %>%
-        dplyr::filter(
-            (.data$border == "start" & .data$region == !!region) |
-                (.data$border == "end" & .data$region == region2)
-        ) %>%
-        dplyr::select(-"region") %>%
-        tidyr::spread(key = "border", value = "loc") %>%
-        dplyr::filter(
-            !is.na(.data$start),
-            .data$start > 0,
-            !is.na(.data$end),
-            .data$end > 0,
-            # end <= readr::parse_number(length),
-            .data$end > .data$start
-        )
-
-    idx <- tibble(
-        seq_id = as.character(seq@id),
-        idx = seq_along(.data$seq_id)
-    ) %>%
-        dplyr::left_join(dplyr::select(p, "seq_id"), ., by = "seq_id") %>%
-        dplyr::pull("idx")
-
-    if (nrow(p)) {
-        out <- ShortRead::narrow(seq[idx], start = p$start, end = p$end)
-        if (!is.null(outfile)) {
-            if (methods::is(out, "ShortReadQ")) {
-                ShortRead::writeFastq(out, outfile, mode = "a")
-            } else {
-                ShortRead::writeFasta(out, outfile, mode = "a")
-            }
-        }
-    } else {
-        out <- seq[FALSE]
-    }
-    return(out)
-}
+#' @rdname extract_region
+#' @export
+extract_region.ShortRead <- do_extract_region
 
 #' @rdname extract_region
 #' @export

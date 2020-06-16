@@ -2,6 +2,11 @@
 
 * Added arguments `"seq_id"` and `"filename"` to `dadamap()`, to make it more
   user-friendly.  Use of `add_dada_names()` is now unnecessary.
+* `extract_region()` auto-detects the format of the output file, if given,
+  from the name.
+* Fixed a bug where `extract_region()` was not saving quality information
+  from the input to an output "fastq" file when the input was a "fastq" file or
+  `QualityScaledXStringSet`.
 
 # tzara 0.0.8
 

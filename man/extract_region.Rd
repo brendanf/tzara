@@ -3,13 +3,22 @@
 \name{extract_region}
 \alias{extract_region}
 \alias{extract_region.character}
-\alias{extract_region.QualityScaledXStringSet}
 \alias{extract_region.XStringSet}
 \alias{extract_region.ShortRead}
 \alias{extract_region.list}
 \title{Extract regions from a set of sequences (maybe with qualities)}
 \usage{
-extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
+extract_region(
+  seq,
+  positions,
+  region,
+  region2 = region,
+  outfile = NULL,
+  append = FALSE,
+  format,
+  compress = NULL,
+  ...
+)
 
 \method{extract_region}{character}(
   seq,
@@ -20,17 +29,7 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   qualityType = "FastqQuality",
   append = FALSE,
   format = NULL,
-  ...
-)
-
-\method{extract_region}{QualityScaledXStringSet}(
-  seq,
-  positions,
-  region,
-  region2 = region,
-  outfile = NULL,
-  append = FALSE,
-  format = "fastq",
+  compress = NULL,
   ...
 )
 
@@ -41,7 +40,8 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   region2 = region,
   outfile = NULL,
   append = FALSE,
-  format = "fasta",
+  format = NULL,
+  compress = NULL,
   ...
 )
 
@@ -52,6 +52,8 @@ extract_region(seq, positions, region, region2 = region, outfile = NULL, ...)
   region2 = region,
   outfile = NULL,
   append = FALSE,
+  format = NULL,
+  compress = NULL,
   ...
 )
 
@@ -83,23 +85,28 @@ the entire ITS region, use \code{region = 'ITS1', region2 = 'ITS2'}.}
 filename given in fasta or fastq format.  The format is determined by
 \code{seq}, not by the extension of \code{outfile}.}
 
-\item{...}{Passed to methods.}
-
-\item{qualityType}{(\code{character} scalar) fastq file quality encoding; see
-\code{\link[ShortRead]{readFastq}}.}
-
 \item{append}{(\code{logical} scalar) if \code{TRUE}, then data is appended
 to \code{outfile}; if \code{FALSE}, existing data in \code{outfile} is
 overwritten.}
 
-\item{format}{(\code{character}) File format to read (if \code{seq} is a
-filename or list of filenames).}
+\item{format}{(\code{character}) File format to write (if \code{outfile} is
+given). Default is to guess based on ".fasta[.gz]" or ".fastq[.gz]"
+extension.}
+
+\item{compress}{(\code{logical} scalar or NULL) Whether to gz-compress
+\code{outfile}. Default is to detect based on presence of ".gz"
+extension.}
+
+\item{...}{Passed to methods.}
+
+\item{qualityType}{(\code{character} scalar) fastq file quality encoding; see
+\code{\link[ShortRead]{readFastq}}.}
 }
 \value{
 (\code{object} of the same class as \code{seq}, or if \code{seq}
-    is a filename, \code{\link[Biostrings]{XStringSet-class}} if \code{format
-    = "fasta"}, \code{\link[Biostrings]{QualityScaledXStringSet-class}} if
-    \code{format = "fastq"}) The requested region from each of the input
+    is a filename, \code{\link[Biostrings]{XStringSet-class}} or
+    \code{\link[Biostrings]{QualityScaledXStringSet-class}} depending on the
+    format of the file) The requested region from each of the input
     sequences where it was found.
 }
 \description{
