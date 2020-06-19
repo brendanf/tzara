@@ -7,6 +7,8 @@
 * Fixed a bug where `extract_region()` was not saving quality information
   from the input to an output "fastq" file when the input was a "fastq" file or
   `QualityScaledXStringSet`.
+* Added argument `"dir"` to `dadamap()`, to specify the location of input files,
+  if `derepFastq()` was originally called on a directory of files.
 
 # tzara 0.0.8
 

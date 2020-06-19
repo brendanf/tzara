@@ -2,9 +2,12 @@
 % Please edit documentation in R/tzara.R
 \name{dadamap}
 \alias{dadamap}
+\alias{dadamap.list}
 \title{Produce a map between denoised sequences and their original identifiers.}
 \usage{
 dadamap(derep, dada, filename = NULL, seq_id = NULL, ...)
+
+\method{dadamap}{list}(derep, dada, filename = names(derep), seq_id = NULL, dir = NULL, ...)
 }
 \arguments{
 \item{derep}{a \code{\link[dada2]{derep-class}} object or list of such
@@ -28,6 +31,8 @@ calling \code{\link{add_derep_names}} on \code{"derep"}.}
 
 \item{...}{additional columns to add to the output.  Names included in the
 output by default should be avoided.}
+
+\item{dir}{(character string) A directory to look for files in.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns:

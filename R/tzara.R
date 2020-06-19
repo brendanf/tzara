@@ -249,8 +249,11 @@ dadamap.derep <- function(derep, dada, filename = NULL, seq_id = NULL, ...) {
     m
 }
 
+#' @rdname dadamap
+#' @param dir (\code{character string}) A directory to look for files in.
 #' @export
 dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL,
+                         dir = NULL,
                          ...) {
     assert_that(assertthat::are_equal(length(derep), length(dada)))
     assert_that(all(
@@ -272,7 +275,14 @@ dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL,
             is.character(filename),
             assertthat::are_equal(length(filename), length(derep))
         )
-        args <- c(args, filename = filename)
+        if (!is.null(dir)) {
+            assert_that(
+                assertthat::is.string(dir),
+                dir.exists(dir)
+            )
+            filename <- file.path(dir, filename)
+        }
+        args <- c(args, list(filename = filename))
     }
     if (!is.null(seq_id)) {
         assert_that(
@@ -637,8 +647,8 @@ detect_format <- function(name, format) {
             "Unable to determine intended format of '%s'",
             name
         )
+        "fasta"
     }
-    return("fasta")
 }
 
 write_region <- function(
