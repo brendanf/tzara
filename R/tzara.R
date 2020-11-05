@@ -282,7 +282,7 @@ dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL,
             )
             filename <- file.path(dir, filename)
         }
-        args <- c(args, list(filename = filename))
+        args[["filename"]] <- filename
     }
     if (!is.null(seq_id)) {
         assert_that(
@@ -290,7 +290,7 @@ dadamap.list <- function(derep, dada, filename = names(derep), seq_id = NULL,
             assertthat::are_equal(length(filename), length(derep)),
             all(purrr::map_lgl(seq_id, is.character))
         )
-        args <- c(args, seq_id = seq_id)
+        args[["seq_id"]] <- seq_id
     }
     args <- do.call(tibble::tibble, args) %>%
         dplyr::filter(!purrr::map_lgl(derep, is.null))
