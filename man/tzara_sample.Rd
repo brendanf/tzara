@@ -11,10 +11,11 @@ A \code{\link[Biostrings]{DNAStringSet}} with three sequences.
 tzara_sample
 }
 \description{
-These are the three most common ASVs from Furneaux et al. 2020 (submitted).
+These are the three most abundant ASVs from
+\href{https://www.authorea.com/doi/full/10.22541/au.160340221.18389016/v1}{Furneaux et al. 2020}.
 They are derived from PacBio RSII metabarcoding of soil samples from
 central Benin, West Africa.
-The three sequences are from the fungal genera _Penicillium_, _Agaricus_
-(used as a control sample), and _Inocybe_.
+The three sequences are from the fungal genera \emph{Penicillium}, \emph{Agaricus}
+(included as a control), and \emph{Inocybe}.
 }
 \keyword{datasets}
