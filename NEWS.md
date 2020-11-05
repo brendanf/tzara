@@ -1,3 +1,7 @@
+# tzara (development version)
+
+* `has_alphabet()` now works even if some of the input sequences are `NA`.
+
 # tzara 0.0.9
 
 * Added arguments `"seq_id"` and `"filename"` to `dadamap()`, to make it more

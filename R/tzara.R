@@ -469,7 +469,7 @@ has_alphabet <- function(seq, alphabet) {
     regex <- paste0("^[", paste0(alphabet, collapse = ""), "]+$")
     # make sure '-' is not interpreted as defining a character range
     regex <- sub(x = regex, pattern = "-", replacement = "\\\\-")
-    return(all(grepl(pattern = regex, x = seq, perl = TRUE)))
+    return(all(grepl(pattern = regex, x = seq, perl = TRUE), na.rm = TRUE))
 }
 
 #' Calculate consensus of a cluster of sequences.
