@@ -12,7 +12,7 @@ reconstruct(
   regions_replace = NULL,
   output = "concat",
   use_output = c("first", "second", "no"),
-  order = setdiff(regions, output),
+  order = regions,
   read_column = "seq_id",
   asv_column = "dada_seq",
   rawtabs = seqtabs,

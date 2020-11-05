@@ -32,7 +32,7 @@ calling \code{\link{add_derep_names}} on \code{"derep"}.}
 \item{...}{additional columns to add to the output.  Names included in the
 output by default should be avoided.}
 
-\item{dir}{(character string) A directory to look for files in.}
+\item{dir}{(\code{character string}) A directory to look for files in.}
 }
 \value{
 a \code{\link[tibble]{tibble}} with columns:
