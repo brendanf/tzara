@@ -898,6 +898,23 @@ str_modify <- function(x, regex = NULL, replace = NULL, ...) {
     }
 }
 
+output_spec <- function(output, order) {
+    if (is.character(output)) {
+        assert_that(assertthat::is.string(output))
+        output <- magrittr::set_names(list(order), output)
+    } else {
+        assert_that(
+            is.list(output),
+            rlang::is_named(output)
+        )
+    }
+    assert_that(
+        all(purrr::map_lgl(output, is.character)),
+        all(purrr::map_lgl(output, ~all(. %in% order)))
+    )
+    output
+}
+
 #' Reconstruct a longer region out of ASVs or consensus sequence of individual
 #' domains.
 #'
@@ -1013,7 +1030,7 @@ reconstruct <- function(
     regions_replace = NULL,
     output = "concat",
     use_output = c("first", "second", "no"),
-    order = setdiff(regions, output),
+    order = regions,
     read_column = "seq_id",
     asv_column = "dada_seq",
     rawtabs = seqtabs,
@@ -1041,19 +1058,7 @@ reconstruct <- function(
 
     assert_that(all(order %in% regions))
 
-    if (is.character(output)) {
-        assert_that(assertthat::is.string(output))
-        output <- magrittr::set_names(list(order), output)
-    } else {
-        assert_that(
-            is.list(output),
-            rlang::is_named(output)
-        )
-    }
-    assert_that(
-        all(purrr::map_lgl(output, is.character)),
-        all(purrr::map_lgl(output, ~all(. %in% order)))
-    )
+    output <- output_spec(output)
 
     region_table <- assemble_region_table(
         seqtabs = seqtabs,
@@ -1186,14 +1191,15 @@ is_string_or_missing <- function(x) {
 assemble_region_table <- function(
     seqtabs,
     regions = names(seqtabs),
-    output,
-    order,
+    output = "concat",
+    order = regions,
     read_column = "seq_id",
     seq_column = "dada_seq",
     sample_column = NULL,
     sample_regex = NULL,
     sample_replace = NULL
 ) {
+    output <- output_spec(output, order)
     assert_that(
         is.list(output),
         rlang::is_named(output),
@@ -1230,20 +1236,21 @@ assemble_region_table <- function(
         )
     }
 
+    all_regions <- c(order, setdiff(intersect(regions, names(output)), order))
     out <- purrr::reduce(
-        seqtabs[order],
+        seqtabs[all_regions],
         dplyr::full_join,
         by = c(sample_column, read_column)
     )
-    for (o in names(output)) {
-        if (o %in% regions) {
-            out <- dplyr::full_join(
-                out,
-                seqtabs[[o]],
-                by = c(sample_column, read_column)
-            )
-        }
-    }
+    # for (o in names(output)) {
+    #     if (o %in% regions) {
+    #         out <- dplyr::full_join(
+    #             out,
+    #             seqtabs[[o]],
+    #             by = c(sample_column, read_column)
+    #         )
+    #     }
+    # }
     out
 }
 
