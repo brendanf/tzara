@@ -1058,7 +1058,7 @@ reconstruct <- function(
 
     assert_that(all(order %in% regions))
 
-    output <- output_spec(output)
+    output <- output_spec(output, order)
 
     region_table <- assemble_region_table(
         seqtabs = seqtabs,
