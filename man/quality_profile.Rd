@@ -5,16 +5,17 @@
 \alias{quality_profile}
 \title{Sample quality scores}
 \format{
-A \code{data.frame} with columns \code{seq_id}, \code{quality},
-and \code{n}, giving the number of times each wuality score appears in each
-read.
+An \code{integer matrix} where rows represent a single sequence,
+columns are named by fastq quality score characters, and values are the
+number of times each character appears in each sequence.
 }
 \usage{
 quality_profile
 }
 \description{
-These are based on CCS quality scores from the first 1000 reads of long
-amplicon PacBio RSII samples in
+These are based on CCS quality scores from 1000 randomly sampled reads of
+long amplicon PacBio RSII samples in
 \href{https://www.authorea.com/doi/full/10.22541/au.160340221.18389016/v1}{Furneaux et al. 2020}.
+All the reads were at least 1000 bp.
 }
 \keyword{datasets}
