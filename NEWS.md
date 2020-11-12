@@ -1,9 +1,11 @@
-# tzara 0.0.11
+# tzara (development version)
 
 * fixed a bug in `cluster_consensus()` with character inputs when names are
   not given.
 * `cluster_consensus()` now gives a result for a single (non-`NA`) unique
   sequence, even if there are less than 3 copies.
+* speed up `cluster_conensus()` by catching some cases where the alignment step
+  can be skipped.
 
 # tzara 0.0.10
 

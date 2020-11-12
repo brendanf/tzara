@@ -562,10 +562,17 @@ cluster_consensus.character <-
 #' @export
 cluster_consensus.XStringSet <-
     function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
+        if (length(nread) == 1) nread <- rlang::rep_along(seq, nread)
+        assertthat::assert_that(length(nread) == length(seq))
 
-        assertthat::assert_that(length(nread) == 1 | length(nread) == length(seq))
+        # a single sequence is its own consensus
         if (length(seq) == 1) return(seq)
+
+        # it's not possible to make a consensus from 2 sequences that disagree
         if (sum(nread) < 3) return(seq[FALSE])
+        # if a single sequence represents a majority of reads,
+        # then it is the consensus
+        if (max(nread) > sum(nread)/2) return(seq[which.max(nread)])
 
         if (methods::is(seq, "RNAStringSet")) {
             mult_align_class <- Biostrings::RNAMultipleAlignment
