@@ -564,8 +564,8 @@ cluster_consensus.XStringSet <-
     function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
 
         assertthat::assert_that(length(nread) == 1 | length(nread) == length(seq))
-        if (sum(nread) < 3) return(seq[FALSE])
         if (length(seq) == 1) return(seq)
+        if (sum(nread) < 3) return(seq[FALSE])
 
         if (methods::is(seq, "RNAStringSet")) {
             mult_align_class <- Biostrings::RNAMultipleAlignment

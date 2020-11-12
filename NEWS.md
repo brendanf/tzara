@@ -12,6 +12,8 @@
 * `has_alphabet()` now works even if some of the input sequences are `NA`.
 * fixed a bug in `cluster_consensus()` with character inputs when names are
   not given.
+* `cluster_consensus()` now gives a result for a single (non-`NA`) unique
+  sequence, even if there are less than 3 copies.
 
 # tzara 0.0.9
 
