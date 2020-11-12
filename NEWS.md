@@ -1,5 +1,7 @@
-# tzara (development version)
+# tzara 0.0.10
 
+* fixed a bug with `"seq_id"` and `"filename"` not being passed correctly from
+  `dadamap.list()` to `dadamap.derep`.
 * `has_alphabet()` now works even if some of the input sequences are `NA`.
 
 # tzara 0.0.9

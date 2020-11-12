@@ -44,4 +44,435 @@ remotes::install_github("brendanf/tzara")
 
 ## Example
 
-Coming soon!
+For the example, we will conduct all analysis in a temporary directory.
+In your own analysis, use your own project directory.
+
+```{r}
+root_dir <- tempdir()
+```
+
+
+### Example data
+
+`dada2`, and thus `tzara`,
+use statistical methods which require many sequences for meaningful results.
+This typically means that an analysis with realistic diversity takes several
+hours to run.
+For this example, we will use simulated data with only six true unique sequences and
+two samples with 1000 reads each.
+
+If you are using this document as a template for your own analysis,
+you can skip this section; start with your own demultiplexed sequences,
+with primers and adapters removed.
+
+There are three sample sequences, belonging to three diferent genera.
+
+```{r}
+tzara_sample
+```
+
+To verify our ability to find variants that differ by only one base pair in ITS2,
+we will create a hypothetical variant of each sequence by changing one of the
+bases in ITS2.
+
+First, mark the original sequences with an "`A`"
+
+```{r}
+originals <- tzara_sample
+names(originals) <- paste0(names(originals), "A")
+originals
+```
+
+Now make the variants; base 480 is in ITS2 of all three.
+After checking the current base at that position (none of them are "`G`"),
+change it to "`G`".
+
+```{r}
+variants <- tzara_sample
+names(variants) <- paste0(names(variants), "B")
+Biostrings::subseq(variants, 480, 480)
+Biostrings::subseq(variants, 480, 480) <- "G"
+Biostrings::subseq(variants, 480, 480)
+```
+
+We will now simulate some random sequencing errors for these reads,
+using the distribution of quality scores from 1000 sequences from the original
+data.
+Substitution errors for each simulated read are generated with the probability
+implied by the quality score at each base.
+This is the best possible situation for `dada2`, because the quality scores
+are perfectly calibrated, and there are no PCR errors (which do not show up in
+quality scores).
+
+```{r}
+simulate_errors <- function(true_seq, qual_prof, prefix = NULL) {
+   n <- length(true_seq)
+   seq <- strsplit(as.character(true_seq), "")
+   slen <- vapply(seq, length, 1L)
+   # concatenate the whole thing as one character vector
+   seq <- unlist(seq)
+   # convert to numbers
+   seq <- match(seq, c("A", "C", "G", "T")) - 1L
+   
+   # choose a quality profile for each sequence
+   qual <- lapply(
+       sample.int(nrow(qual_prof), length(slen), replace = TRUE),
+       function(x) qual_prof[x,]
+   )
+   # choose quality scores for each base
+   qual <- mapply(sample, size = slen, prob = qual,
+                  MoreArgs = list(x = colnames(qual_prof), replace = TRUE))
+   qual <- vapply(qual, paste, "", collapse = "")
+   qual <- Biostrings::PhredQuality(qual)
+   prob <- as(qual, "NumericList")
+   prob <- unlist(as.list(prob))
+   
+   # determine which bases have substitution errors
+   error <- which(rbinom(prob, size = 1, prob = prob) == 1)
+   # randomly change the bases
+   if (length(error) > 0) {
+      seq[error] <- (seq[error] + sample(1:3, length(error), replace = TRUE)) %% 4
+   }
+   # convert back to bases
+   seq <- c("A", "C", "G", "T")[seq + 1L]
+   
+   # Split back into individual sequence and scores 
+   groups <- rep(seq_along(slen), times = slen)
+   seq <- vapply(split(seq, groups), paste, "", collapse = "")
+   names(seq) <- paste0(prefix, "read", seq_len(n))
+   names(qual) <- names(seq)
+   Biostrings::QualityScaledDNAStringSet(seq, qual)
+}
+```
+
+We will have 900 of each original sequence, and 100 of its single-base variant,
+for a total of 3000 sequences.
+They are divided randomly into two samples of 1500 reads each.
+
+```{r}
+reads <- c(rep(originals, c(900, 450, 225)), rep(variants, c(100, 50, 25)))
+reads <- simulate_errors(reads, quality_profile, paste0(names(reads), "_"))
+reads <- split(sample(reads), rep(paste0("Sample", 1:2), 875))
+```
+
+Save the reads into a "`demux`" directory, as though we had just demultiplexed
+and trimmed them.
+
+```{r}
+demux_dir <- file.path(root_dir, "demux")
+if (!dir.exists(demux_dir)) dir.create(demux_dir, recursive = TRUE)
+for (r in names(reads)) {
+    Biostrings::writeQualityScaledXStringSet(
+        reads[[r]],
+        filepath = file.path(demux_dir, paste0(r, ".fastq.gz")),
+        compress = "gzip"
+    )
+}
+```
+
+### Region extraction
+
+Region extraction can be performed using
+[`ITSx`](https://microbiology.se/software/itsx/),
+which can separate an rDNA sequence into SSU, ITS1, 5.8S, ITS2, and LSU regions
+using hidden markov models (HMMs), or by using
+[`LSUx`](https://github.com/brendanf/LSUx), which does not,
+in its current version, separate SSU from ITS1,
+but which also divides LSU into alternating conserved and variable regions.
+
+The example data is from amplicons generated using the primers ITS1 and LR5,
+so they include only about 12 bp of SSU, but approximately 850 bp of LSU.
+Running `ITSx` would fail to detect such a short fragment of SSU,
+and keep LSU in one region, which would be a bit long for `dada2`.
+Instead, we will use `LSUx`.
+
+These commands install the R packages `inferrnal` (with two "r"'s required by `LSUx`),
+`LSUx`, and `tzara` if they are not already present.
+To run this notebook, you will also need to install
+[Infernal](http://eddylab.org/software/infernal/)
+(with one "r", required by `inferrnal`).
+
+```{r}
+if (!requireNamespace("remotes")) install.packages("remotes")
+if (!requireNamespace("inferrnal")) remotes::install_github("brendanf/inferrnal")
+if (!requireNamespace("LSUx")) remotes::install_github("brendanf/LSUx")
+if (!requireNamespace("tzara")) remotes::install_github("brendanf/tzara")
+```
+
+`LSUx` uses covariance models to identify the different regions of LSU.
+The default uses a model of 5.8S to identify the 5' end of the LSU secondary structure (which includes 5.8S),
+and then a model of the full 32S precursor RNA to identify features within LSU.
+It is more computationally efficient to use a truncated model, which ends at the location of the 3' primer used in the study.
+Such truncated models can be generated by the `LSUx` function `truncate_alignment()`,
+followed by the `inferrnal` function `cmbuild()`.
+However, for the case of LR5, the primer used to generate the sample data,
+the required CM is included with `LSUx`.
+
+```{r}
+cm <- system.file(file.path("extdata", "fungi_32S_LR5.cm"), package = "LSUx")
+```
+
+We now loop through all of our input files, and use `LSUx::lsux()` to find the start and end points of each region in each read.
+Then, we extract each of the regions with `tzara::extract_region()`,
+and put each region in its own directory.
+
+This took my development computer about 1 minute on 8 cpus.
+
+```{r results=FALSE}
+region_dir <- file.path(root_dir, "region")
+dir.create(region_dir, showWarnings = FALSE)
+for (f in list.files(demux_dir, full.names = TRUE)) {
+    pos <- LSUx::lsux(f, cm_32S = cm, ITS1 = TRUE, global = TRUE, quiet = TRUE)
+    regions <- unique(pos$region)
+    for (r in regions) {
+        dir.create(file.path(region_dir, r), showWarnings = FALSE)
+        region_file <- file.path(region_dir, r, basename(f))
+        if (file.exists(region_file)) next()
+        tzara::extract_region(
+            f,
+            positions = pos,
+            region = r,
+            outfile = region_file
+        )
+    }
+}
+```
+
+`LSUx` names the variable regions of LSU according to the V numbers of Raué et al. (1988),
+which can be used for both prokaryotes and eukaryotes.
+Eukaryotic studies usually use the D numbers of Michot et al. (1984).
+Eukaryotic ITS2 corresponds to V1, so V2 *sensu* Raué is D1 *sensu* Michot.
+Conserved regions between the variable regions are numbered LSU1, LSU2, LSU3, etc.
+
+```{r}
+regions <- list.files(region_dir, pattern = "[A_Z0-9_]+", full.names = FALSE)
+regions
+```
+
+
+### Quality filtering
+
+Quality filtering can be performed using the standard `dada2` methods.
+However, it is helpful to use different parameters for the different regions,
+especially maximum and minimum length.
+Note that the conserved regions can have much tighter length limits than the
+variable regions.
+
+```{r}
+filter_dir <- file.path(root_dir, "filter")
+dir.create(filter_dir, showWarnings = FALSE)
+maxLen <- c(
+    ITS1   = 500,
+    `5_8S` = 175,
+    ITS2   = 500,
+    LSU1   = 120,
+    V2     = 200,
+    LSU2   = 175,
+    V3     = 1000,
+    LSU3   = 60,
+    V4     = 500,
+    LSU4   = 175
+)
+
+minLen <- c(
+    ITS1   = 50,
+    `5_8S` = 125,
+    ITS2   = 50,
+    LSU1   = 90,
+    V2     = 125,
+    LSU2   = 150,
+    V3     = 50,
+    LSU3   = 30,
+    V4     = 50,
+    LSU4   = 150
+)
+
+for (r in regions) {
+    region_fastq <- list.files(file.path(region_dir, r), full.names = TRUE)
+    filter_fastq <- file.path(filter_dir, r, basename(region_fastq))
+    dada2::filterAndTrim(
+        region_fastq,
+        filter_fastq,
+        truncQ = 0,
+        minLen = minLen[r],
+        maxLen = maxLen[r],
+        maxN = 0,
+        maxEE = 3,
+        verbose = TRUE
+    )
+}
+```
+
+For comparison of results,
+we can also perform the analysis on the full-length reads.
+
+```{r}
+full_fastq <- list.files(demux_dir, full.names = TRUE)
+filter_fastq <- file.path(filter_dir, "full", basename(full_fastq))
+dada2::filterAndTrim(
+    full_fastq,
+    filter_fastq,
+    truncQ = 0,
+    minLen = 1200,
+    maxLen = 1800,
+    maxN = 0,
+    maxEE = 3,
+    verbose = TRUE
+)
+```
+
+Notice we've already lost a large fraction of the reads, because they have more
+than 3 expected errors.
+
+### Dereplication
+
+Dereplication uses the standard `dada2` method.
+It's important to give `qualityType = "FastqQuality"`,
+because the auto-detected quality type may be wrong for PacBio data when all of the quality scores are very high.
+
+```{r}
+dereps <- list()
+for (r in regions) {
+    region_fastq <- list.files(file.path(filter_dir, r), full.names = TRUE)
+    dereps[[r]] <- dada2::derepFastq(region_fastq,
+                                     qualityType = "FastqQuality",
+                                     verbose = TRUE)
+}
+```
+
+Notice that in all these cases, the number of unique sequences is between 1/3
+and 1/2 the total number of sequences.
+This means that there are duplicates, which are necessary for `dada2` to form
+the seeds for ASVs.
+However, notice that the number of unique sequences is MUCH larger than the
+number of "true" error-free sequences, which is 3 for most regions,
+but 6 for ITS2, because we introduced single-base variants there.
+
+Also dereplicate the full-length sequences.
+
+```{r}
+full_fastq <- list.files(file.path(filter_dir, "full"), full.names = TRUE)
+dereps[["full"]] <- dada2::derepFastq(
+    full_fastq,
+    qualityType = "FastqQuality",
+    verbose = TRUE
+)
+```
+
+
+### Error fitting
+
+Because all of the regions come from the same reads,
+the same error profile should apply to all of them.
+To save time, we can fit just one.
+However, in order to verify that the different regions have similar error
+profiles, we can fit one for a variable region (ITS2) and one for a very
+conserved region (LSU4).
+
+```{r}
+errITS <- dada2::learnErrors(
+    fls = dereps[["ITS2"]],
+    errorEstimationFunction = dada2::PacBioErrfun,
+    multithread = TRUE,
+    verbose = TRUE,
+    pool = TRUE
+)
+
+errLSU <- dada2::learnErrors(
+    fls = dereps[["LSU4"]],
+    errorEstimationFunction = dada2::PacBioErrfun,
+    multithread = TRUE,
+    verbose = TRUE,
+    pool = TRUE
+)
+```
+
+It is always good practice to look at the error model.
+
+```{r}
+dada2::plotErrors(errITS, nominalQ = TRUE)
+dada2::plotErrors(errLSU, nominalQ = TRUE)
+```
+
+Although there is a slight decreasing trend in the fit error rates,
+it appears that the PacBio quality scores are not reliable indicators for this
+dataset, presumably because the errors are dominated by PCR amplification errors.
+
+We also fit an error model to the full length reads, for comparison.
+
+```{r}
+err_full <- dada2::learnErrors(
+    fls = dereps[["full"]],
+    errorEstimationFunction = dada2::PacBioErrfun,
+    multithread = TRUE,
+    verbose = TRUE,
+    pool = TRUE
+)
+```
+
+```{r}
+dada2::plotErrors(err_full, nominalQ = TRUE)
+```
+
+This error model has almost no dependence on quality scores,
+and also predicts a much higher error rate in general.
+
+### Denoising
+
+`dada()` is run on each of the regions independently.
+
+```{r}
+dada <- list()
+for (r in regions) {
+    dada[[r]] <- dada2::dada(
+        derep = dereps[[r]],
+        err = errLSU,
+        pool = TRUE,
+        multithread = TRUE
+    )
+}
+```
+
+...and the full length reads for comparison.
+
+```{r}
+dada[["full"]] <- dada2::dada(
+        derep = dereps[["full"]],
+        err = err_full,
+        pool = TRUE,
+        multithread = TRUE
+)
+```
+
+We can see that the number of unique sequences is almost as high as the number
+of total reads.
+This means most reads are singletons.
+In long reads with a moderate error rate, this is expected.
+
+### Remapping
+
+The objects returned by `dada()` do not include enough information to map each
+raw read to its assigned ASV.
+This mapping can be recreated using the `derep` object that was passed to 
+`dada`.
+
+
+```{r}
+dadamaps <- list()
+for (r in regions) {
+    dadamaps[[r]] <- tzara::dadamap(
+        dereps[[r]],
+        dada[[r]],
+        region = r,
+        dir = file.path(filter_dir, r)
+    )
+}
+recon <- tzara::reconstruct(
+    dadamaps,
+    order = c("ITS1", "5_8S", "ITS2", "LSU1", "V2", "LSU2", "V3", "LSU3", "V4",
+              "LSU4"),
+    sample_column = "name"
+)
+```
+
+
