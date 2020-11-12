@@ -11,7 +11,7 @@ cluster_consensus(seq, nread = 1, ..., ncpus = 1, simplify = TRUE)
 \method{cluster_consensus}{character}(
   seq,
   nread = 1,
-  names = names(seq),
+  names = base::names(seq),
   dna2rna = TRUE,
   ...,
   ncpus = 1,
