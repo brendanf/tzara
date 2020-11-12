@@ -1,5 +1,12 @@
 # tzara 0.0.10
 
+* `extract_region()` auto-detects the format of the output file, if given,
+  from the name.
+* Fixed a bug where `extract_region()` was not saving quality information
+  from the input to an output "fastq" file when the input was a "fastq" file or
+  `QualityScaledXStringSet`.
+* Added argument `"dir"` to `dadamap()`, to specify the location of input files,
+  if `derepFastq()` was originally called on a directory of files.
 * fixed a bug with `"seq_id"` and `"filename"` not being passed correctly from
   `dadamap.list()` to `dadamap.derep`.
 * `has_alphabet()` now works even if some of the input sequences are `NA`.
@@ -8,14 +15,7 @@
 
 * Added arguments `"seq_id"` and `"filename"` to `dadamap()`, to make it more
   user-friendly.  Use of `add_dada_names()` is now unnecessary.
-* `extract_region()` auto-detects the format of the output file, if given,
-  from the name.
-* Fixed a bug where `extract_region()` was not saving quality information
-  from the input to an output "fastq" file when the input was a "fastq" file or
-  `QualityScaledXStringSet`.
-* Added argument `"dir"` to `dadamap()`, to specify the location of input files,
-  if `derepFastq()` was originally called on a directory of files.
-
+  
 # tzara 0.0.8
 
 * Added a `NEWS.md` file to track changes to the package.
