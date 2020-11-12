@@ -821,10 +821,11 @@ do_extract_region <- function(seq, positions, region, region2 = region,
 #' @export
 extract_region.character <- function(seq, positions, region, region2 = region,
                                      outfile = NULL,
-                                     qualityType = "FastqQuality", #nolint
                                      append = FALSE,
                                      format = NULL,
-                                     compress = NULL, ...) {
+                                     compress = NULL,
+                                     qualityType = "FastqQuality", #nolint
+                                     ...) {
     assert_that(assertthat::is.flag(append),
                 is.null(format) || format %in% c("fasta", "fastq"))
 

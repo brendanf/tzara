@@ -26,10 +26,10 @@ extract_region(
   region,
   region2 = region,
   outfile = NULL,
-  qualityType = "FastqQuality",
   append = FALSE,
   format = NULL,
   compress = NULL,
+  qualityType = "FastqQuality",
   ...
 )
 
