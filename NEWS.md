@@ -10,6 +10,8 @@
 * fixed a bug with `"seq_id"` and `"filename"` not being passed correctly from
   `dadamap.list()` to `dadamap.derep`.
 * `has_alphabet()` now works even if some of the input sequences are `NA`.
+* fixed a bug in `cluster_consensus()` with character inputs when names are
+  not given.
 
 # tzara 0.0.9
 

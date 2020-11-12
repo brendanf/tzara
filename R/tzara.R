@@ -529,8 +529,8 @@ cluster_consensus <- function(seq, nread = 1, ..., ncpus = 1, simplify = TRUE) {
 #' @rdname cluster_consensus
 #' @export
 cluster_consensus.character <-
-    function(seq, nread = 1, names = names(seq), dna2rna = TRUE, ..., ncpus = 1,
-             simplify = TRUE) {
+    function(seq, nread = 1, names = base::names(seq), dna2rna = TRUE, ...,
+             ncpus = 1, simplify = TRUE) {
         seq <- rlang::set_names(seq, names)
         xss <- seq[!is.na(seq)]
         nread <- nread[!is.na(seq)]
