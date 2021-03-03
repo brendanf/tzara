@@ -60,3 +60,7 @@ RoxygenNote: 7.1.0
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Remotes:
+    brendanf/inferrnal
+    brendanf/LSUx
+    brendanf/rITSx

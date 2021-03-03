@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # tzara
 
 <!-- badges: start -->
-[![Travis build status](https://travis-ci.com/brendanf/tzara.svg?branch=master)](https://travis-ci.com/brendanf/tzara)
+[![R build status](https://github.com/brendanf/tzara/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/brendanf/tzara/actions)
 [![Codecov test coverage](https://codecov.io/gh/brendanf/tzara/branch/master/graph/badge.svg)](https://codecov.io/gh/brendanf/tzara?branch=master)
 <!-- badges: end -->
 
@@ -48,7 +48,7 @@ For the example, we will conduct all analysis in a temporary directory.
 In your own analysis, use your own project directory.
 
 ```{r}
-root_dir <- tempdir()
+root_dir <- "temp"
 ```
 
 
@@ -68,6 +68,7 @@ with primers and adapters removed.
 There are three sample sequences, belonging to three diferent genera.
 
 ```{r}
+library(tzara)
 tzara_sample
 ```
 
