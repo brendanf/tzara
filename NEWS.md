@@ -1,4 +1,4 @@
-# tzara (development version)
+# tzara 0.0.11
 
 * fixed a bug in `cluster_consensus()` with character inputs when names are
   not given.
