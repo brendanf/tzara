@@ -42,7 +42,6 @@ Imports:
    Biostrings,
    ShortRead,
    DECIPHER,
-   odseq,
    assertthat,
    rlang,
    tictoc
